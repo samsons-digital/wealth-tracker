@@ -738,33 +738,35 @@ function loadState() { try { const s=localStorage.getItem('wt_state2'); if(s) st
 function saveState() { localStorage.setItem('wt_state2', JSON.stringify(state)); }
 loadState();
 
-// PIN — simple and robust
-let pin = '';
+// PIN
+var _pin = '';
+var _pinCorrect = '1379';
 function pinPress(d) {
-  if (pin.length >= 4) return;
-  pin += d;
-  updateDots();
-  if (pin.length === 4) {
-    if (pin === CONFIG.PIN) {
+  if (_pin.length >= 4) return;
+  _pin += d;
+  for (var i = 0; i < 4; i++) {
+    document.getElementById('d' + i).classList.toggle('filled', i < _pin.length);
+  }
+  if (_pin.length === 4) {
+    if (_pin === _pinCorrect) {
       document.getElementById('pinScreen').style.display = 'none';
       initPortal();
     } else {
       document.getElementById('pinError').textContent = 'Incorrect PIN';
-      pin = '';
-      updateDots();
+      _pin = '';
+      for (var j = 0; j < 4; j++) {
+        document.getElementById('d' + j).classList.remove('filled');
+      }
     }
   }
 }
 function pinDel() {
-  if (!pin.length) return;
-  pin = pin.slice(0, -1);
-  updateDots();
-  document.getElementById('pinError').textContent = '';
-}
-function updateDots() {
-  for (let i = 0; i < 4; i++) {
-    document.getElementById('d' + i).classList.toggle('filled', i < pin.length);
+  if (!_pin.length) return;
+  _pin = _pin.slice(0, -1);
+  for (var i = 0; i < 4; i++) {
+    document.getElementById('d' + i).classList.toggle('filled', i < _pin.length);
   }
+  document.getElementById('pinError').textContent = '';
 }
 
 
