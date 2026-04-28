@@ -379,13 +379,13 @@ input:focus, select:focus { outline: none; border-color: var(--gold); background
 <!-- ACTUAL VS PROJECTED -->
 <div class="page" id="pg-avp">
   <div class="h1">Actual vs Projected</div>
-  <div class="sub">Log your real ATFX balance each month and compare against projections</div>
+  <div class="sub">Log your real ATFX balance each month and compare against projections — all values in USD</div>
 
   <div class="fbox">
     <div class="ftitle">Log Actual ATFX Balance</div>
     <div class="fgrid">
       <div class="fg"><label>Month</label><input type="month" id="avpMonth"></div>
-      <div class="fg"><label>Balance (AED)</label><input type="number" id="avpBal" placeholder="e.g. 42500"></div>
+      <div class="fg"><label>Balance (USD)</label><input type="number" id="avpBal" placeholder="e.g. 11500"></div>
       <div class="fg"><label>Notes</label><input type="text" id="avpNotes" placeholder="Optional"></div>
     </div>
     <button class="btn" onclick="saveAVP()">Save Balance</button>
@@ -394,22 +394,22 @@ input:focus, select:focus { outline: none; border-color: var(--gold); background
 
   <div class="grid">
     <div class="card gold">
-      <div class="clabel">Latest Actual</div>
+      <div class="clabel">Latest Actual (USD)</div>
       <div class="cval gold" id="avpLatest">No data</div>
       <div class="csub" id="avpLatestDate">—</div>
     </div>
     <div class="card teal">
-      <div class="clabel">vs Moderate</div>
+      <div class="clabel">vs Moderate (USD)</div>
       <div class="cval" id="avpVsMod">—</div>
       <div class="csub" id="avpVsModPct">—</div>
     </div>
     <div class="card">
-      <div class="clabel">vs Optimistic</div>
+      <div class="clabel">vs Optimistic (USD)</div>
       <div class="cval" id="avpVsOpt">—</div>
       <div class="csub" id="avpVsOptPct">—</div>
     </div>
     <div class="card">
-      <div class="clabel">vs Conservative</div>
+      <div class="clabel">vs Conservative (USD)</div>
       <div class="cval" id="avpVsCon">—</div>
       <div class="csub" id="avpVsConPct">—</div>
     </div>
@@ -432,7 +432,7 @@ input:focus, select:focus { outline: none; border-color: var(--gold); background
     <div class="tbox-head">Balance History</div>
     <div style="overflow-x:auto">
       <table>
-        <thead><tr><th>Month</th><th>Actual</th><th>Moderate Projection</th><th>Variance</th><th>Notes</th></tr></thead>
+        <thead><tr><th>Month</th><th>Actual (USD)</th><th>Moderate Projection (USD)</th><th>Variance (USD)</th><th>Notes</th></tr></thead>
         <tbody id="avpTbody"></tbody>
       </table>
     </div>
@@ -700,6 +700,7 @@ var MORT_ORIG  = 860000;
 var MORT_PAID  = 3;
 var CAP_START  = 36700;
 var SETTLE_TOT = 45761;
+var AED_USD = 3.67;
 var RATES      = {opt:0.1515, mod:0.08, con:0.05};
 
 // ─── STATE ────────────────────────────────────────────────────────
@@ -842,7 +843,7 @@ function initDash() {
 
   if(S.balances.length) {
     var lat = S.balances[S.balances.length-1];
-    document.getElementById('dbActual').textContent     = fn(lat.balance);
+    document.getElementById('dbActual').textContent     = fusd(lat.balance)+' (~'+fn(Math.round(lat.balance*AED_USD))+')';
     document.getElementById('dbActualDate').textContent = new Date(lat.month+'-01').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
     document.getElementById('nwPortfolio').textContent  = fa(lat.balance);
     document.getElementById('nwVal').textContent        = fa(lat.balance+1075000-mortNow);
@@ -940,15 +941,26 @@ function saveAVP() {
   document.getElementById('avpNotes').value='';
   refreshAVP(); sync('actual_balance',{month:month,balance:bal,notes:notes});
 }
+function toUSD(aed) { return Math.round(aed/AED_USD); }
+function fusd(v) {
+  if(v===null||v===undefined||isNaN(v)) return '—';
+  var a=Math.abs(v);
+  if(a>=1e6) return '$'+(v/1e6).toFixed(2)+'M';
+  if(a>=1e3) return '$'+Math.round(v/1e3).toLocaleString()+'K';
+  return '$'+Math.round(v).toLocaleString();
+}
 function refreshAVP() {
   if(!S.balances.length) return;
   var lat=S.balances[S.balances.length-1];
   var ld=new Date(lat.month+'-01');
-  document.getElementById('avpLatest').textContent=fn(lat.balance);
+  // balance stored in USD directly
+  var latUSD=lat.balance;
+  document.getElementById('avpLatest').textContent=fusd(latUSD);
   document.getElementById('avpLatestDate').textContent=ld.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-  function sc(vi,pi,proj) {
-    var d=lat.balance-proj, p=((d/proj)*100).toFixed(1);
-    document.getElementById(vi).textContent=(d>=0?'+':'')+fn(d);
+  function sc(vi,pi,projAED) {
+    var projUSD=toUSD(projAED);
+    var d=latUSD-projUSD, p=((d/projUSD)*100).toFixed(1);
+    document.getElementById(vi).textContent=(d>=0?'+':'')+fusd(d);
     document.getElementById(vi).style.color=d>=0?'var(--teal)':'var(--red)';
     document.getElementById(pi).textContent=(d>=0?'+':'')+p+'%';
   }
@@ -963,7 +975,7 @@ function buildAVPChart() {
   var pts=P.mod.filter(function(p){ return p.date<=end; });
   var step=Math.max(1,Math.floor(pts.length/60));
   var lbl=pts.filter(function(_,i){ return i%step===0; }).map(function(p){ return p.date.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}); });
-  var smp=function(k){ return P[k].filter(function(p){ return p.date<=end; }).filter(function(_,i){ return i%step===0; }).map(function(p){ return p.v; }); };
+  var smpUSD=function(k){ return P[k].filter(function(p){ return p.date<=end; }).filter(function(_,i){ return i%step===0; }).map(function(p){ return toUSD(p.v); }); };
   var act=pts.filter(function(_,i){ return i%step===0; }).map(function(p){
     var m=S.balances.find(function(b){ var bd=new Date(b.month+'-01'); return bd.getFullYear()===p.date.getFullYear()&&bd.getMonth()===p.date.getMonth(); });
     return m?m.balance:null;
@@ -971,27 +983,29 @@ function buildAVPChart() {
   CH['avpChart']=new Chart(document.getElementById('avpChart'),{
     type:'line',
     data:{labels:lbl,datasets:[
-      {label:'Optimistic',  data:smp('opt'),borderColor:'#1D9E75',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false},
-      {label:'Moderate',    data:smp('mod'),borderColor:'#378ADD',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[5,3]},
-      {label:'Conservative',data:smp('con'),borderColor:'#BA7517',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[2,4]},
+      {label:'Optimistic',  data:smpUSD('opt'),borderColor:'#1D9E75',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false},
+      {label:'Moderate',    data:smpUSD('mod'),borderColor:'#378ADD',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[5,3]},
+      {label:'Conservative',data:smpUSD('con'),borderColor:'#BA7517',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[2,4]},
       {label:'Actual',      data:act,borderColor:'#b8922e',backgroundColor:'#b8922e',borderWidth:2.5,pointRadius:5,tension:0.3,fill:false,spanGaps:false}
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){ return ' '+c.dataset.label+': '+fs(c.raw)+' AED'; }}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){ return ' '+c.dataset.label+': $'+Math.round(c.raw).toLocaleString(); }}}},
       scales:{x:{ticks:{autoSkip:true,maxRotation:45,font:{size:10},color:'#888'},grid:{display:false}},
-              y:{ticks:{font:{size:10},color:'#888',callback:function(v){ return fs(v); }},grid:{color:'rgba(0,0,0,0.05)'}}}}
+              y:{ticks:{font:{size:10},color:'#888',callback:function(v){ return '$'+fs(v); }},grid:{color:'rgba(0,0,0,0.05)'}}}}
   });
 }
 function buildAVPTable() {
   var tb=document.getElementById('avpTbody'); tb.innerHTML='';
   if(!S.balances.length){ tb.innerHTML='<tr><td colspan="5" class="empty">No balances logged.</td></tr>'; return; }
   S.balances.slice().reverse().forEach(function(b) {
-    var bd=new Date(b.month+'-01'), proj=valAt(P.mod,bd), diff=b.balance-proj;
+    var bd=new Date(b.month+'-01');
+    var projUSD=toUSD(valAt(P.mod,bd));
+    var diff=b.balance-projUSD;
     var row=document.createElement('tr');
     row.innerHTML='<td>'+bd.toLocaleDateString('en-GB',{month:'long',year:'numeric'})+'</td>'
-      +'<td><strong>'+fn(b.balance)+'</strong></td>'
-      +'<td style="color:var(--blue)">'+fn(proj)+'</td>'
-      +'<td><span class="badge '+(diff>=0?'bg-g':'bg-r')+'">'+(diff>=0?'+':'')+fn(diff)+'</span></td>'
+      +'<td><strong>'+fusd(b.balance)+'</strong></td>'
+      +'<td style="color:var(--blue)">'+fusd(projUSD)+'</td>'
+      +'<td><span class="badge '+(diff>=0?'bg-g':'bg-r')+'">'+(diff>=0?'+':'')+fusd(diff)+'</span></td>'
       +'<td style="color:var(--ink-faint)">'+(b.notes||'—')+'</td>';
     tb.appendChild(row);
   });
