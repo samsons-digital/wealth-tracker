@@ -209,6 +209,17 @@ input:focus, select:focus { outline: none; border-color: var(--gold); background
 
 .empty { text-align: center; padding: 2rem; color: var(--ink-faint); font-size: 0.85rem; }
 
+
+.row-actions { display:flex; gap:6px; }
+.btn-edit { padding:3px 10px; font-size:0.72rem; border-radius:6px; border:1px solid var(--blue); color:var(--blue); background:transparent; cursor:pointer; font-family:'DM Sans',sans-serif; }
+.btn-edit:hover { background:var(--blue); color:#fff; }
+.btn-del { padding:3px 10px; font-size:0.72rem; border-radius:6px; border:1px solid var(--red); color:var(--red); background:transparent; cursor:pointer; font-family:'DM Sans',sans-serif; }
+.btn-del:hover { background:var(--red); color:#fff; }
+.edit-row td { background:rgba(184,146,46,0.06); }
+.edit-row input, .edit-row select { height:32px; font-size:0.8rem; padding:0 8px; }
+.btn-save-edit { padding:4px 12px; font-size:0.78rem; border-radius:6px; border:none; background:var(--teal); color:#fff; cursor:pointer; font-family:'DM Sans',sans-serif; }
+.btn-cancel-edit { padding:4px 12px; font-size:0.78rem; border-radius:6px; border:1px solid var(--ink-faint); color:var(--ink-soft); background:transparent; cursor:pointer; font-family:'DM Sans',sans-serif; }
+
 @media(max-width:600px) { main { padding: 1rem; } header { padding: 0 1rem; } .nwval { font-size: 1.5rem; } }
 </style>
 </head>
@@ -432,7 +443,7 @@ input:focus, select:focus { outline: none; border-color: var(--gold); background
     <div class="tbox-head">Balance History</div>
     <div style="overflow-x:auto">
       <table>
-        <thead><tr><th>Month</th><th>Actual (USD)</th><th>Moderate Projection (USD)</th><th>Variance (USD)</th><th>Notes</th></tr></thead>
+        <thead><tr><th>Month</th><th>Actual (USD)</th><th>Moderate Projection (USD)</th><th>Variance (USD)</th><th>Notes</th><th>Actions</th></tr></thead>
         <tbody id="avpTbody"></tbody>
       </table>
     </div>
@@ -574,7 +585,7 @@ input:focus, select:focus { outline: none; border-color: var(--gold); background
     <div class="tbox-head">Income History</div>
     <div style="overflow-x:auto">
       <table>
-        <thead><tr><th>Date</th><th>Amount</th><th>Reference</th><th>Notes</th></tr></thead>
+        <thead><tr><th>Date</th><th>Amount</th><th>Reference</th><th>Notes</th><th>Actions</th></tr></thead>
         <tbody id="tiTbody"><tr><td colspan="4" class="empty">No entries yet.</td></tr></tbody>
       </table>
     </div>
@@ -608,7 +619,7 @@ input:focus, select:focus { outline: none; border-color: var(--gold); background
     <div class="tbox-head">Payment History</div>
     <div style="overflow-x:auto">
       <table>
-        <thead><tr><th>Date</th><th>Amount</th><th>Reference</th><th>Notes</th></tr></thead>
+        <thead><tr><th>Date</th><th>Amount</th><th>Reference</th><th>Notes</th><th>Actions</th></tr></thead>
         <tbody id="mlTbody"></tbody>
       </table>
     </div>
@@ -660,7 +671,7 @@ input:focus, select:focus { outline: none; border-color: var(--gold); background
     <div class="tbox-head">Payment History</div>
     <div style="overflow-x:auto">
       <table>
-        <thead><tr><th>#</th><th>Date</th><th>Amount</th><th>Method</th><th>Reference</th><th>Running Balance</th><th>Notes</th></tr></thead>
+        <thead><tr><th>#</th><th>Date</th><th>Amount</th><th>Method</th><th>Reference</th><th>Running Balance</th><th>Notes</th><th>Actions</th></tr></thead>
         <tbody id="stTbody"><tr><td colspan="7" class="empty">No payments logged yet.</td></tr></tbody>
       </table>
     </div>
@@ -998,16 +1009,19 @@ function buildAVPChart() {
 function buildAVPTable() {
   var tb=document.getElementById('avpTbody'); tb.innerHTML='';
   if(!S.balances.length){ tb.innerHTML='<tr><td colspan="5" class="empty">No balances logged.</td></tr>'; return; }
-  S.balances.slice().reverse().forEach(function(b) {
+  S.balances.slice().reverse().forEach(function(b,ri) {
+    var idx=S.balances.length-1-ri;
     var bd=new Date(b.month+'-01');
     var projUSD=toUSD(valAt(P.mod,bd));
     var diff=b.balance-projUSD;
     var row=document.createElement('tr');
+    row.id='avp-row-'+idx;
     row.innerHTML='<td>'+bd.toLocaleDateString('en-GB',{month:'long',year:'numeric'})+'</td>'
       +'<td><strong>'+fusd(b.balance)+'</strong></td>'
       +'<td style="color:var(--blue)">'+fusd(projUSD)+'</td>'
       +'<td><span class="badge '+(diff>=0?'bg-g':'bg-r')+'">'+(diff>=0?'+':'')+fusd(diff)+'</span></td>'
-      +'<td style="color:var(--ink-faint)">'+(b.notes||'—')+'</td>';
+      +'<td style="color:var(--ink-faint)">'+(b.notes||'—')+'</td>'
+      +'<td><div class="row-actions"><button class="btn-edit" onclick="editAVP('+idx+')">Edit</button><button class="btn-del" onclick="delAVP('+idx+')">Delete</button></div></td>';
     tb.appendChild(row);
   });
 }
@@ -1111,12 +1125,15 @@ function refreshTI() {
   document.getElementById('tiReinvested').textContent=fn(total);
   var tb=document.getElementById('tiTbody'); tb.innerHTML='';
   if(!S.tenant.length){ tb.innerHTML='<tr><td colspan="4" class="empty">No entries yet.</td></tr>'; return; }
-  S.tenant.slice().reverse().forEach(function(t) {
+  S.tenant.slice().reverse().forEach(function(t,ri) {
+    var idx=S.tenant.length-1-ri;
     var row=document.createElement('tr');
+    row.id='ti-row-'+idx;
     row.innerHTML='<td>'+new Date(t.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'</td>'
       +'<td><strong style="color:var(--teal)">'+fn(t.amount)+'</strong></td>'
       +'<td style="color:var(--ink-faint)">'+(t.ref||'—')+'</td>'
-      +'<td style="color:var(--ink-faint)">'+(t.notes||'—')+'</td>';
+      +'<td style="color:var(--ink-faint)">'+(t.notes||'—')+'</td>'
+      +'<td><div class="row-actions"><button class="btn-edit" onclick="editTI('+idx+')">Edit</button><button class="btn-del" onclick="delTI('+idx+')">Delete</button></div></td>';
     tb.appendChild(row);
   });
 }
@@ -1143,12 +1160,15 @@ function refreshML() {
   document.getElementById('mtPays').textContent=S.mortgage.length;
   var tb=document.getElementById('mlTbody'); tb.innerHTML='';
   if(!S.mortgage.length){ tb.innerHTML='<tr><td colspan="4" class="empty">No payments.</td></tr>'; return; }
-  S.mortgage.slice().reverse().forEach(function(p) {
+  S.mortgage.slice().reverse().forEach(function(p,ri) {
+    var idx=S.mortgage.length-1-ri;
     var row=document.createElement('tr');
+    row.id='ml-row-'+idx;
     row.innerHTML='<td>'+new Date(p.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'</td>'
       +'<td><strong style="color:var(--red)">'+fn(p.amount)+'</strong></td>'
       +'<td style="color:var(--ink-faint)">'+(p.ref||'—')+'</td>'
-      +'<td style="color:var(--ink-faint)">'+(p.notes||'—')+'</td>';
+      +'<td style="color:var(--ink-faint)">'+(p.notes||'—')+'</td>'
+      +'<td><div class="row-actions"><button class="btn-edit" onclick="editML('+idx+')">Edit</button><button class="btn-del" onclick="delML('+idx+')">Delete</button></div></td>';
     tb.appendChild(row);
   });
 }
@@ -1202,15 +1222,136 @@ function refreshST() {
   S.settlement.forEach(function(p,i) {
     run-=p.amount;
     var row=document.createElement('tr');
+    row.id='st-row-'+i;
     row.innerHTML='<td style="color:var(--ink-faint)">'+(i+1)+'</td>'
       +'<td>'+new Date(p.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'</td>'
       +'<td><strong style="color:var(--teal)">'+fn(p.amount)+'</strong></td>'
       +'<td><span class="badge bg-b">'+(p.method||'—')+'</span></td>'
       +'<td style="color:var(--ink-faint)">'+(p.ref||'—')+'</td>'
-      +'<td style="color:'+(run<=0?'var(--teal)':'var(--red)');'">'+( run<=0?'SETTLED':fn(run))+'</td>'
-      +'<td style="color:var(--ink-faint)">'+(p.notes||'—')+'</td>';
+      +'<td style="color:'+(run<=0?'var(--teal)':'var(--red)')+'">'+( run<=0?'SETTLED':fn(run))+'</td>'
+      +'<td style="color:var(--ink-faint)">'+(p.notes||'—')+'</td>'
+      +'<td><div class="row-actions"><button class="btn-edit" onclick="editST('+i+')">Edit</button><button class="btn-del" onclick="delST('+i+')">Delete</button></div></td>';
     tb.appendChild(row);
   });
+}
+
+
+// ─── EDIT / DELETE ────────────────────────────────────────────────
+function delAVP(idx) {
+  if(!confirm('Delete this balance entry?')) return;
+  S.balances.splice(idx,1); save(); refreshAVP(); initDash();
+}
+function editAVP(idx) {
+  var b=S.balances[idx];
+  var tb=document.getElementById('avpTbody');
+  var targetRow=null;
+  tb.querySelectorAll('tr').forEach(function(r){ if(r.id==='avp-row-'+idx) targetRow=r; });
+  if(!targetRow) return;
+  targetRow.className='edit-row';
+  targetRow.innerHTML='<td><input type="month" value="'+b.month+'" id="avped-m-'+idx+'" style="width:140px"></td>'
+    +'<td><input type="number" value="'+b.balance+'" id="avped-b-'+idx+'" style="width:110px"></td>'
+    +'<td colspan="2" style="color:var(--ink-faint);font-size:0.78rem">Projection auto-calculated</td>'
+    +'<td><input type="text" value="'+(b.notes||'')+'" id="avped-n-'+idx+'" placeholder="Notes"></td>'
+    +'<td><div class="row-actions"><button class="btn-save-edit" onclick="saveAVPed('+idx+')">Save</button> <button class="btn-cancel-edit" onclick="refreshAVP()">Cancel</button></div></td>';
+}
+function saveAVPed(idx) {
+  var m=document.getElementById('avped-m-'+idx).value;
+  var b=parseFloat(document.getElementById('avped-b-'+idx).value);
+  var n=document.getElementById('avped-n-'+idx).value;
+  if(!m||!b) return;
+  S.balances[idx]={month:m,balance:b,notes:n};
+  S.balances.sort(function(a,b){ return a.month<b.month?-1:1; });
+  save(); refreshAVP(); initDash();
+}
+
+function delTI(idx) {
+  if(!confirm('Delete this income entry?')) return;
+  S.tenant.splice(idx,1); save(); refreshTI();
+}
+function editTI(idx) {
+  var t=S.tenant[idx];
+  var tb=document.getElementById('tiTbody');
+  var targetRow=null;
+  tb.querySelectorAll('tr').forEach(function(r){ if(r.id==='ti-row-'+idx) targetRow=r; });
+  if(!targetRow) return;
+  targetRow.className='edit-row';
+  targetRow.innerHTML='<td><input type="date" value="'+t.date+'" id="tied-d-'+idx+'" style="width:130px"></td>'
+    +'<td><input type="number" value="'+t.amount+'" id="tied-a-'+idx+'" style="width:110px"></td>'
+    +'<td><input type="text" value="'+(t.ref||'')+'" id="tied-r-'+idx+'" placeholder="Ref"></td>'
+    +'<td><input type="text" value="'+(t.notes||'')+'" id="tied-n-'+idx+'" placeholder="Notes"></td>'
+    +'<td><div class="row-actions"><button class="btn-save-edit" onclick="saveTIed('+idx+')">Save</button> <button class="btn-cancel-edit" onclick="refreshTI()">Cancel</button></div></td>';
+}
+function saveTIed(idx) {
+  var d=document.getElementById('tied-d-'+idx).value;
+  var a=parseFloat(document.getElementById('tied-a-'+idx).value);
+  var r=document.getElementById('tied-r-'+idx).value;
+  var n=document.getElementById('tied-n-'+idx).value;
+  if(!d||!a) return;
+  S.tenant[idx]={date:d,amount:a,ref:r,notes:n,id:S.tenant[idx].id};
+  S.tenant.sort(function(a,b){ return a.date<b.date?-1:1; });
+  save(); refreshTI();
+}
+
+function delML(idx) {
+  if(!confirm('Delete this mortgage payment?')) return;
+  S.mortgage.splice(idx,1); save(); refreshML();
+}
+function editML(idx) {
+  var p=S.mortgage[idx];
+  var tb=document.getElementById('mlTbody');
+  var targetRow=null;
+  tb.querySelectorAll('tr').forEach(function(r){ if(r.id==='ml-row-'+idx) targetRow=r; });
+  if(!targetRow) return;
+  targetRow.className='edit-row';
+  targetRow.innerHTML='<td><input type="date" value="'+p.date+'" id="mled-d-'+idx+'" style="width:130px"></td>'
+    +'<td><input type="number" value="'+p.amount+'" id="mled-a-'+idx+'" style="width:110px"></td>'
+    +'<td><input type="text" value="'+(p.ref||'')+'" id="mled-r-'+idx+'" placeholder="Ref"></td>'
+    +'<td><input type="text" value="'+(p.notes||'')+'" id="mled-n-'+idx+'" placeholder="Notes"></td>'
+    +'<td><div class="row-actions"><button class="btn-save-edit" onclick="saveMLed('+idx+')">Save</button> <button class="btn-cancel-edit" onclick="refreshML()">Cancel</button></div></td>';
+}
+function saveMLed(idx) {
+  var d=document.getElementById('mled-d-'+idx).value;
+  var a=parseFloat(document.getElementById('mled-a-'+idx).value);
+  var r=document.getElementById('mled-r-'+idx).value;
+  var n=document.getElementById('mled-n-'+idx).value;
+  if(!d||!a) return;
+  S.mortgage[idx]={date:d,amount:a,ref:r,notes:n,id:S.mortgage[idx].id};
+  S.mortgage.sort(function(a,b){ return a.date<b.date?-1:1; });
+  save(); refreshML();
+}
+
+function delST(idx) {
+  if(!confirm('Delete this settlement payment?')) return;
+  S.settlement.splice(idx,1); save(); refreshST();
+}
+function editST(idx) {
+  var p=S.settlement[idx];
+  var tb=document.getElementById('stTbody');
+  var targetRow=null;
+  tb.querySelectorAll('tr').forEach(function(r){ if(r.id==='st-row-'+idx) targetRow=r; });
+  if(!targetRow) return;
+  targetRow.className='edit-row';
+  targetRow.innerHTML='<td style="color:var(--ink-faint)">'+(idx+1)+'</td>'
+    +'<td><input type="date" value="'+p.date+'" id="sted-d-'+idx+'" style="width:130px"></td>'
+    +'<td><input type="number" value="'+p.amount+'" id="sted-a-'+idx+'" style="width:110px"></td>'
+    +'<td><select id="sted-m-'+idx+'"><option>Bank Transfer</option><option>Cash</option><option>Cheque</option><option>Other</option></select></td>'
+    +'<td><input type="text" value="'+(p.ref||'')+'" id="sted-r-'+idx+'" placeholder="Ref"></td>'
+    +'<td></td>'
+    +'<td><input type="text" value="'+(p.notes||'')+'" id="sted-n-'+idx+'" placeholder="Notes"></td>'
+    +'<td><div class="row-actions"><button class="btn-save-edit" onclick="saveSTed('+idx+')">Save</button> <button class="btn-cancel-edit" onclick="refreshST()">Cancel</button></div></td>';
+  var sel=document.getElementById('sted-m-'+idx);
+  for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value===p.method) sel.selectedIndex=i; }
+}
+function saveSTed(idx) {
+  var d=document.getElementById('sted-d-'+idx).value;
+  var a=parseFloat(document.getElementById('sted-a-'+idx).value);
+  var m=document.getElementById('sted-m-'+idx).value;
+  var r=document.getElementById('sted-r-'+idx).value;
+  var n=document.getElementById('sted-n-'+idx).value;
+  if(!d||!a) return;
+  S.settlement[idx]={date:d,amount:a,method:m,ref:r,notes:n,id:S.settlement[idx].id};
+  S.settlement.sort(function(a,b){ return a.date<b.date?-1:1; });
+  save(); refreshST();
 }
 
 // ─── SYNC TO SHEET ────────────────────────────────────────────────
