@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wealth Tracker — Martin & Oksana</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
   :root {
@@ -17,18 +18,6 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'DM Sans', sans-serif; background: #f4f6f8; color: var(--ink); min-height: 100vh; }
 
-  #pinScreen { position: fixed; inset: 0; background: #f4f6f8; display: flex; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; gap: 2rem; overflow-y: auto; }
-  #pinScreen h1 { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--gold); text-align: center; }
-  #pinScreen p { color: var(--ink-soft); font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; }
-  .pin-dots { display: flex; gap: 12px; justify-content: center; margin: 0.5rem 0; }
-  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--gold); background: rgba(184,146,46,0.1); transition: background 0.2s; }
-  .pin-dot.filled { background: var(--gold); }
-  .pin-pad { display: grid; grid-template-columns: repeat(3, 64px); gap: 10px; }
-  .pin-btn { width: 64px; height: 64px; border-radius: 50%; border: 1px solid rgba(184,146,46,0.35); background: rgba(255,255,255,0.9); color: var(--ink); font-size: 1.2rem; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; }
-  .pin-btn:hover { background: rgba(184,146,46,0.12); border-color: var(--gold); }
-  .pin-btn:active { transform: scale(0.95); }
-  .pin-btn.del { font-size: 0.9rem; color: var(--gold); }
-  #pinError { color: var(--red); font-size: 0.8rem; text-align: center; min-height: 1.2em; }
 
   header { background: var(--ink); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(184,146,46,0.15); }
   .header-brand { display: flex; align-items: center; gap: 12px; }
@@ -134,34 +123,13 @@
 </head>
 <body>
 
-<!-- PIN -->
-<div id="pinScreen">
-  <div style="text-align:center;">
-    <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#b8922e,#d4a843);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-family:'DM Serif Display',serif;font-size:1.8rem;color:#fff;">W</div>
     <h1>Wealth Tracker</h1>
     <p style="margin-top:6px;">Martin &amp; Oksana</p>
   </div>
   <div>
     <p style="margin-bottom:12px;">Enter PIN to continue</p>
-    <div class="pin-dots">
-      <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
-      <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
     </div>
-    <div id="pinError">&nbsp;</div>
   </div>
-  <div class="pin-pad">
-    <button class="pin-btn" onclick="pinPress('1')">1</button>
-    <button class="pin-btn" onclick="pinPress('2')">2</button>
-    <button class="pin-btn" onclick="pinPress('3')">3</button>
-    <button class="pin-btn" onclick="pinPress('4')">4</button>
-    <button class="pin-btn" onclick="pinPress('5')">5</button>
-    <button class="pin-btn" onclick="pinPress('6')">6</button>
-    <button class="pin-btn" onclick="pinPress('7')">7</button>
-    <button class="pin-btn" onclick="pinPress('8')">8</button>
-    <button class="pin-btn" onclick="pinPress('9')">9</button>
-    <button class="pin-btn" style="visibility:hidden;"></button>
-    <button class="pin-btn" onclick="pinPress('0')">0</button>
-    <button class="pin-btn del" onclick="pinDel()">&#9003;</button>
   </div>
 </div>
 
@@ -738,35 +706,7 @@ function loadState() { try { const s=localStorage.getItem('wt_state2'); if(s) st
 function saveState() { localStorage.setItem('wt_state2', JSON.stringify(state)); }
 loadState();
 
-// PIN
-var _pin = '';
-var _pinCorrect = '1379';
-function pinPress(d) {
-  if (_pin.length >= 4) return;
-  _pin += d;
-  for (var i = 0; i < 4; i++) {
-    document.getElementById('d' + i).classList.toggle('filled', i < _pin.length);
-  }
-  if (_pin.length === 4) {
-    if (_pin === _pinCorrect) {
-      document.getElementById('pinScreen').style.display = 'none';
-      initPortal();
-    } else {
-      document.getElementById('pinError').textContent = 'Incorrect PIN';
-      _pin = '';
-      for (var j = 0; j < 4; j++) {
-        document.getElementById('d' + j).classList.remove('filled');
-      }
-    }
-  }
-}
-function pinDel() {
-  if (!_pin.length) return;
-  _pin = _pin.slice(0, -1);
-  for (var i = 0; i < 4; i++) {
-    document.getElementById('d' + i).classList.toggle('filled', i < _pin.length);
-  }
-  document.getElementById('pinError').textContent = '';
+
 }
 
 
@@ -1280,8 +1220,6 @@ function refreshSettlement() {
 }
 
 function initPortal() {
-  const ps=document.getElementById("pinScreen");
-  if(ps) { ps.style.display="none"; ps.style.pointerEvents="none"; }
   buildProjections();
   prepopulateKnownPayments();
   setDefaultDates();
@@ -1292,6 +1230,8 @@ function initPortal() {
   refreshMortLog();
   refreshSettlement();
 }
+
+window.addEventListener("load", initPortal);
 </script>
 </body>
 </html>
