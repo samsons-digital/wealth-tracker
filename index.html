@@ -17,7 +17,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'DM Sans', sans-serif; background: #f4f6f8; color: var(--ink); min-height: 100vh; }
 
-  #pinScreen { position: fixed; inset: 0; background: #f4f6f8; display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; gap: 2rem; }
+  #pinScreen { position: fixed; inset: 0; background: #f4f6f8; display: flex; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; gap: 2rem; overflow-y: auto; }
   #pinScreen h1 { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--gold); text-align: center; }
   #pinScreen p { color: var(--ink-soft); font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; }
   .pin-dots { display: flex; gap: 12px; justify-content: center; margin: 0.5rem 0; }
@@ -743,20 +743,35 @@ let pin='';
 function pinPress(d) {
   if(pin.length>=4) return;
   pin+=d;
-  document.getElementById('d'+(pin.length-1)).classList.add('filled');
+  for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled', i<pin.length);
   if(pin.length===4) {
     setTimeout(()=>{
-      if(pin===CONFIG.PIN) { document.getElementById('pinScreen').style.display='none'; initPortal(); }
-      else { document.getElementById('pinError').textContent='Incorrect PIN. Try again.'; pin=''; for(let i=0;i<4;i++) document.getElementById('d'+i).classList.remove('filled'); }
-    },200);
+      if(pin===CONFIG.PIN) {
+        document.getElementById('pinScreen').style.display='none';
+        document.getElementById('pinScreen').style.pointerEvents='none';
+        initPortal();
+      } else {
+        document.getElementById('pinError').textContent='Incorrect PIN. Try again.';
+        pin='';
+        for(let i=0;i<4;i++) document.getElementById('d'+i).classList.remove('filled');
+        setTimeout(()=>{ document.getElementById('pinError').textContent='\u00a0'; },2000);
+      }
+    },150);
   }
 }
 function pinDel() {
   if(!pin.length) return;
-  document.getElementById('d'+(pin.length-1)).classList.remove('filled');
   pin=pin.slice(0,-1);
+  for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled', i<pin.length);
   document.getElementById('pinError').textContent='\u00a0';
 }
+// Keyboard support
+document.addEventListener('keydown', function(e) {
+  if(document.getElementById('pinScreen').style.display==='none') return;
+  if(e.key>='0'&&e.key<='9') pinPress(e.key);
+  else if(e.key==='Backspace') pinDel();
+  else if(e.key==='Enter'&&pin.length===4) pinPress('');
+});
 
 // NAV
 function showSection(id,btn) {
@@ -1265,6 +1280,9 @@ function refreshSettlement() {
 }
 
 function initPortal() {
+  // Ensure pin screen is hidden
+  const ps=document.getElementById("pinScreen");
+  if(ps) { ps.style.display="none"; ps.style.pointerEvents="none"; }
   prepopulateKnownPayments();
   setDefaultDates();
   initDashboard();
