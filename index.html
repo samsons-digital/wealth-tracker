@@ -419,7 +419,7 @@
       </div>
       <div class="networth-item">
         <div style="color:var(--ink-faint);font-size:0.75rem;">Property Assets</div>
-        <div style="color:#fff;font-size:1.1rem;font-weight:500;" id="dbProperty">2.3M AED</div>
+        <div style="color:#fff;font-size:1.1rem;font-weight:500;" id="dbProperty">1.98M AED</div>
       </div>
       <div class="networth-item">
         <div style="color:var(--ink-faint);font-size:0.75rem;">Total Mortgages</div>
@@ -682,26 +682,53 @@
   </div>
 
   <div id="propContent-apt">
+    <div style="background:rgba(226,75,74,0.07);border:1px solid rgba(226,75,74,0.18);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>
+        <div style="font-size:0.85rem;font-weight:500;color:var(--red);">Upfront Cost Settlement Outstanding</div>
+        <div style="font-size:0.78rem;color:var(--ink-soft);margin-top:2px;">Martin still owes Oksana <strong>45,761 AED</strong> from upfront costs split (291,522 AED total, 50/50). Martin reimbursed 100,000 AED of his 145,761 AED share. 2 EMI payments made: Mar 2026 + Apr 2026 (12,906 AED total).</div>
+      </div>
+      <span style="background:rgba(226,75,74,0.12);color:var(--red);padding:4px 12px;border-radius:12px;font-size:0.8rem;font-weight:500;">45,761 AED outstanding</span>
+    </div>
     <div class="metric-grid">
       <div class="metric-card gold-accent">
-        <div class="metric-label">Current Quarterly Rent</div>
+        <div class="metric-label">Purchase Price</div>
+        <div class="metric-value gold">1,075,000 AED</div>
+        <div class="metric-sub">Azizi Riviera 12 — 1BR</div>
+      </div>
+      <div class="metric-card red-accent">
+        <div class="metric-label">Mortgage Outstanding</div>
+        <div class="metric-value red">853,532 AED</div>
+        <div class="metric-sub">0.75% paid — 2 payments made</div>
+      </div>
+      <div class="metric-card red-accent">
+        <div class="metric-label">Monthly EMI</div>
+        <div class="metric-value red" id="apt-mortNow">6,453 AED</div>
+        <div class="metric-sub">Martin 3,227 + Oksana 3,227</div>
+      </div>
+      <div class="metric-card gold-accent">
+        <div class="metric-label">Quarterly Rent Income</div>
         <div class="metric-value gold" id="apt-rentNow">21,250 AED</div>
         <div class="metric-sub">Growing 6.5%/year</div>
       </div>
-      <div class="metric-card red-accent">
-        <div class="metric-label">Monthly Mortgage</div>
-        <div class="metric-value red" id="apt-mortNow">6,450 AED</div>
-        <div class="metric-sub">Next increase Apr 2029</div>
-      </div>
       <div class="metric-card teal-accent">
         <div class="metric-label">Quarterly Net Surplus</div>
-        <div class="metric-value teal" id="apt-surplus">1,900 AED</div>
-        <div class="metric-sub">Into trading account</div>
+        <div class="metric-value teal" id="apt-surplus">1,997 AED</div>
+        <div class="metric-sub">Rent minus 3 months EMI</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Upfront Costs Paid</div>
+        <div class="metric-value">291,522 AED</div>
+        <div class="metric-sub">Martin owes Oksana 45,761 AED</div>
       </div>
       <div class="metric-card">
         <div class="metric-label">Annual Rental Yield</div>
-        <div class="metric-value">~9.2%</div>
-        <div class="metric-sub">On purchase price</div>
+        <div class="metric-value">~7.9%</div>
+        <div class="metric-sub">85K AED / 1.075M purchase</div>
+      </div>
+      <div class="metric-card blue-accent">
+        <div class="metric-label">Oksana Total Income Logged</div>
+        <div class="metric-value" style="color:var(--blue)">29,311 AED</div>
+        <div class="metric-sub">From property income sheet</div>
       </div>
     </div>
     <div class="chart-card">
@@ -923,10 +950,10 @@ const CONFIG = {
   APT_BASE_RENT: 21250,
   STUDIO_BASE_RENT: 18750,
   RENT_GROWTH: 0.065,
-  APT_MORT_BASE: 6450,
+  APT_MORT_BASE: 6453,  // Actual EMI per sheet
   STUDIO_MORT_BASE: 5510,
   MORT_INCREASE: 0.04,
-  APT_MORT_MONTHS: 150,
+  APT_MORT_MONTHS: 150,  // ~12.5 years remaining
   STUDIO_MORT_MONTHS: 180,
   START_CAPITAL: 36700,
   RATES: { opt: 0.1515, mod: 0.08, con: 0.05 }
@@ -1107,7 +1134,7 @@ function initDashboard() {
 
   const aptMonths = monthsBetween(CONFIG.START_DATE, now);
   const studioMonths = Math.max(0, monthsBetween(CONFIG.STUDIO_START, now));
-  const aptRemain = Math.round(Math.max(0, 875000 - (CONFIG.APT_MORT_BASE * 0.6 * aptMonths)));
+  const aptRemain = Math.round(Math.max(0, 853532 - (CONFIG.APT_MORT_BASE * 0.6 * Math.max(0, aptMonths - 2))));
   const studioRemain = Math.round(Math.max(0, 720000 - (CONFIG.STUDIO_MORT_BASE * 0.55 * studioMonths)));
   const totalMort = aptRemain + studioRemain;
 
@@ -1140,10 +1167,10 @@ function initDashboard() {
     document.getElementById('dbActual').textContent = fmtNum(latest.balance);
     document.getElementById('dbActualDate').textContent = 'As of '+latest.month;
     document.getElementById('dbPortfolio').textContent = fmtAED(latest.balance);
-    document.getElementById('netWorthVal').textContent = fmtAED(latest.balance + 2300000);
+    document.getElementById('netWorthVal').textContent = fmtAED(latest.balance + 1975000);
   } else {
     document.getElementById('dbPortfolio').textContent = fmtAED(projMod);
-    document.getElementById('netWorthVal').textContent = fmtAED(projMod + 2300000);
+    document.getElementById('netWorthVal').textContent = fmtAED(projMod + 1975000);
   }
 
   buildDashChart();
@@ -1350,6 +1377,9 @@ function buildAVPTable() {
 // ═══════════════════════════════════════════════════════
 // MORTGAGE TRACKER
 // ═══════════════════════════════════════════════════════
+const APT_PAYMENTS_MADE = 2;  // Mar 2026 + Apr 2026
+const APT_OUTSTANDING_ACTUAL = 853532;  // After 2 payments at 4.5% p.a.
+
 function initMortgageTracker() {
   const now = new Date();
   const aptMonths = monthsBetween(CONFIG.START_DATE, now);
@@ -1358,11 +1388,12 @@ function initMortgageTracker() {
   const aptPmt = aptMortgage(aptMonths);
   const studioPmt = studioMortgage(studioMonths);
   document.getElementById('mt1Payment').textContent = aptPmt.toLocaleString()+' AED';
+  document.getElementById('mt1NextIncrease').textContent = '2 payments made (Mar + Apr 2026) — Next increase: Apr 2029';
   document.getElementById('mt2Payment').textContent = studioMonths>0 ? studioPmt.toLocaleString()+' AED' : 'Starts Sep 2026';
 
-  const aptPaid = Math.round(CONFIG.APT_MORT_BASE * 0.6 * aptMonths);
-  const aptRemain = Math.max(0, 875000 - aptPaid);
-  const aptPct = Math.round((aptPaid/875000)*100);
+  const aptPaid = Math.round(CONFIG.APT_MORT_BASE * 0.6 * Math.max(0, aptMonths - APT_PAYMENTS_MADE));
+  const aptRemain = Math.max(0, APT_OUTSTANDING_ACTUAL - aptPaid);
+  const aptPct = parseFloat(((860000 - aptRemain) / 860000 * 100).toFixed(2));
   document.getElementById('mt1Remaining').textContent = fmtAED(aptRemain);
   document.getElementById('mt1PaidPct').innerHTML = `<div class="progress-wrap"><div class="progress-bar" style="width:${aptPct}%;background:var(--teal)"></div></div>${aptPct}% principal paid`;
 
@@ -1387,7 +1418,7 @@ function buildMortChart() {
   for(let m=0;m<=180;m+=3) {
     const d = new Date(CONFIG.START_DATE); d.setMonth(d.getMonth()+m);
     labels.push(d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}));
-    apt.push(Math.max(0, Math.round(875000 - (CONFIG.APT_MORT_BASE*0.6*m))));
+    apt.push(Math.max(0, Math.round(853532 - (CONFIG.APT_MORT_BASE*0.6*m))));
     studio.push(m>=5 ? Math.max(0, Math.round(720000 - (CONFIG.STUDIO_MORT_BASE*0.55*Math.max(0,m-5)))) : 720000);
   }
   charts['mort'] = new Chart(document.getElementById('mortChart'),{
@@ -1665,6 +1696,21 @@ function toggleStudioStatus() {
   }
   localStorage.setItem('wt_studio_purchased', studioPurchased ? '1' : '0');
   syncToSheet('studio_status', { purchased: studioPurchased, date: new Date().toISOString() });
+}
+
+
+function prepopulateKnownPayments() {
+  const known = [
+    { property: 'Azizi Riviera 12 1BR', date: '2026-02-28', amount: 6453, ref: 'EMI-001', notes: 'First mortgage payment', id: 1 },
+    { property: 'Azizi Riviera 12 1BR', date: '2026-04-01', amount: 6453, ref: 'EMI-002', notes: 'Second mortgage payment', id: 2 },
+  ];
+  known.forEach(k => {
+    if (!state.mortgagePayments.find(p => p.id === k.id)) {
+      state.mortgagePayments.push(k);
+    }
+  });
+  state.mortgagePayments.sort((a,b) => a.date.localeCompare(b.date));
+  saveState();
 }
 
 function loadStudioStatus() {
