@@ -254,6 +254,61 @@
   .networth-items { display: flex; gap: 2rem; flex-wrap: wrap; }
   .networth-item { text-align: right; }
 
+
+  /* STUDIO STATUS BANNER */
+  .studio-status-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; border-radius: var(--radius-sm);
+    margin-bottom: 1.25rem; flex-wrap: wrap; gap: 8px;
+  }
+  .studio-status-bar.not-purchased {
+    background: rgba(226,75,74,0.08);
+    border: 1px solid rgba(226,75,74,0.2);
+  }
+  .studio-status-bar.purchased {
+    background: rgba(29,158,117,0.08);
+    border: 1px solid rgba(29,158,117,0.2);
+  }
+  .studio-status-text { font-size: 0.85rem; font-weight: 500; }
+  .studio-status-bar.not-purchased .studio-status-text { color: var(--red); }
+  .studio-status-bar.purchased .studio-status-text { color: var(--teal); }
+  .studio-status-sub { font-size: 0.78rem; color: var(--ink-soft); margin-top: 2px; }
+  .status-toggle-btn {
+    padding: 6px 16px; border-radius: 20px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .status-toggle-btn.activate { background: var(--teal); color: white; }
+  .status-toggle-btn.deactivate { background: var(--red); color: white; }
+  .studio-projections-note {
+    background: rgba(186,117,23,0.08); border: 1px solid rgba(186,117,23,0.2);
+    border-radius: var(--radius-sm); padding: 10px 16px;
+    font-size: 0.82rem; color: var(--amber); margin-bottom: 1.25rem;
+  }
+
+  /* PROPERTY SWITCHER on dashboard */
+  .prop-switcher {
+    display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap;
+  }
+  .prop-switch-btn {
+    padding: 7px 16px; border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--card); color: var(--ink-soft);
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .prop-switch-btn.active {
+    background: var(--ink); color: var(--gold);
+    border-color: var(--ink);
+  }
+  .prop-switch-btn.inactive-prop {
+    border-style: dashed; color: var(--ink-faint);
+  }
+  .prop-switch-btn.inactive-prop.active {
+    background: rgba(226,75,74,0.08); color: var(--red);
+    border-color: var(--red); border-style: solid;
+  }
+
   /* LOADING */
   .loading { text-align: center; padding: 2rem; color: var(--ink-faint); font-size: 0.88rem; }
 
@@ -345,6 +400,12 @@
   <h2 class="section-heading">Dashboard</h2>
   <p class="section-sub">Live snapshot of your wealth position</p>
 
+  <div class="prop-switcher">
+    <button class="prop-switch-btn active" id="psw-both" onclick="switchDashProp('both',this)">Both Properties</button>
+    <button class="prop-switch-btn" id="psw-apt" onclick="switchDashProp('apt',this)">Azizi Riviera 12 1BR</button>
+    <button class="prop-switch-btn inactive-prop" id="psw-studio" onclick="switchDashProp('studio',this)">Studio (Not Purchased Yet)</button>
+  </div>
+
   <div class="networth-banner">
     <div>
       <div class="networth-label">Estimated Net Worth</div>
@@ -415,22 +476,22 @@
 
   <div class="metric-grid">
     <div class="metric-card">
-      <div class="metric-label">Existing Apt — Next Cheque</div>
+      <div class="metric-label">Azizi Riviera 12 1BR — Next Cheque</div>
       <div class="metric-value" id="dbNextApt">—</div>
       <div class="metric-sub" id="dbNextAptDate">18 Sep 2026</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Studio — Next Cheque</div>
+      <div class="metric-label">Studio — Next Cheque <span id="studioActiveTag" style="font-size:0.65rem;background:rgba(226,75,74,0.12);color:var(--red);padding:2px 6px;border-radius:10px;margin-left:4px;">Not Purchased</span></div>
       <div class="metric-value" id="dbNextStudio">—</div>
       <div class="metric-sub" id="dbNextStudioDate">Dec 2026</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Existing Mort. Remaining</div>
+      <div class="metric-label">Azizi Riviera 12 — Remaining</div>
       <div class="metric-value red" id="dbMortRemain1">—</div>
       <div class="metric-sub">Est. outstanding</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Studio Mort. Remaining</div>
+      <div class="metric-label">Studio — Remaining (Est.)</div>
       <div class="metric-value red" id="dbMortRemain2">—</div>
       <div class="metric-sub">Est. outstanding</div>
     </div>
@@ -562,32 +623,32 @@
 
   <div class="metric-grid">
     <div class="metric-card red-accent">
-      <div class="metric-label">Existing Apt — Current Payment</div>
+      <div class="metric-label">Azizi Riviera 12 1BR — Payment</div>
       <div class="metric-value red" id="mt1Payment">6,450 AED</div>
       <div class="metric-sub" id="mt1NextIncrease">Next increase: Apr 2029</div>
     </div>
     <div class="metric-card red-accent">
-      <div class="metric-label">Studio — Current Payment</div>
+      <div class="metric-label">Studio — Payment (Not Active)</div>
       <div class="metric-value red" id="mt2Payment">5,510 AED</div>
       <div class="metric-sub" id="mt2NextIncrease">Next increase: Sep 2029</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Existing Apt — Remaining Balance</div>
+      <div class="metric-label">Azizi Riviera 12 1BR — Remaining</div>
       <div class="metric-value" id="mt1Remaining">—</div>
       <div class="metric-sub" id="mt1PaidPct">—</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Studio — Remaining Balance</div>
+      <div class="metric-label">Studio — Remaining (Est.)</div>
       <div class="metric-value" id="mt2Remaining">—</div>
       <div class="metric-sub" id="mt2PaidPct">—</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Existing Apt — Clears</div>
+      <div class="metric-label">Azizi Riviera 12 1BR — Clears</div>
       <div class="metric-value" id="mt1Clears">Apr 2038</div>
       <div class="metric-sub">150 months from start</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Studio — Clears</div>
+      <div class="metric-label">Studio — Clears (Est.)</div>
       <div class="metric-value" id="mt2Clears">Sep 2041</div>
       <div class="metric-sub">180 months from Sep 2026</div>
     </div>
@@ -602,7 +663,7 @@
     <div class="table-card-header"><div class="table-card-title">Payment Schedule — Rate Increase Points</div></div>
     <div style="overflow-x:auto;">
       <table>
-        <thead><tr><th>Period</th><th>Start Date</th><th>Existing Apt /mo</th><th>Studio /mo</th><th>Combined /mo</th><th>Change</th></tr></thead>
+        <thead><tr><th>Period</th><th>Start Date</th><th>Azizi 1BR /mo</th><th>Studio /mo</th><th>Combined /mo</th><th>Change</th></tr></thead>
         <tbody id="mortScheduleBody"></tbody>
       </table>
     </div>
@@ -615,8 +676,8 @@
   <p class="section-sub">Income, mortgage and net position for each property</p>
 
   <div class="prop-tabs">
-    <button class="prop-tab active" onclick="showPropTab('apt',this)">Existing Apartment</button>
-    <button class="prop-tab" onclick="showPropTab('studio',this)">Studio Apartment</button>
+    <button class="prop-tab active" onclick="showPropTab('apt',this)">Azizi Riviera 12 1BR</button>
+    <button class="prop-tab" onclick="showPropTab('studio',this)">Studio (Not Purchased Yet)</button>
     <button class="prop-tab" onclick="showPropTab('combined',this)">Combined View</button>
   </div>
 
@@ -644,12 +705,22 @@
       </div>
     </div>
     <div class="chart-card">
-      <div class="chart-header"><div class="chart-title">Rent Income vs Mortgage — Existing Apartment</div></div>
+      <div class="chart-header"><div class="chart-title">Rent Income vs Mortgage — Azizi Riviera 12 1BR</div></div>
       <div class="chart-wrap"><canvas id="aptChart" role="img" aria-label="Existing apartment rent vs mortgage chart"></canvas></div>
     </div>
   </div>
 
   <div id="propContent-studio" style="display:none;">
+    <div class="studio-status-bar not-purchased" id="studioBanner">
+      <div>
+        <div class="studio-status-text" id="studioStatusText">&#9679; Studio Not Yet Purchased</div>
+        <div class="studio-status-sub" id="studioStatusSub">Projections shown are estimates based on planned Sep 2026 purchase</div>
+      </div>
+      <button class="status-toggle-btn activate" id="studioToggleBtn" onclick="toggleStudioStatus()">Mark as Purchased</button>
+    </div>
+    <div class="studio-projections-note" id="studioNote">
+      All figures below are projected estimates. Studio mortgage and income will activate automatically from Sep 2026 in the model. Mark as purchased when Oksana completes the acquisition.
+    </div>
     <div class="metric-grid">
       <div class="metric-card gold-accent">
         <div class="metric-label">Current Quarterly Rent</div>
@@ -674,7 +745,7 @@
     </div>
     <div class="chart-card">
       <div class="chart-header"><div class="chart-title">Rent Income vs Mortgage — Studio</div></div>
-      <div class="chart-wrap"><canvas id="studioChart" role="img" aria-label="Studio apartment rent vs mortgage chart"></canvas></div>
+      <div class="chart-wrap"><canvas id="studioChart" role="img" aria-label="Studio (Not Purchased Yet) rent vs mortgage chart"></canvas></div>
     </div>
   </div>
 
@@ -719,8 +790,8 @@
       <div class="form-group">
         <label>Property</label>
         <select id="ti-property">
-          <option value="Existing Apartment">Existing Apartment</option>
-          <option value="Studio">Studio Apartment</option>
+          <option value="Azizi Riviera 12 1BR">Azizi Riviera 12 1BR</option>
+          <option value="Studio">Studio (Not Purchased Yet)</option>
         </select>
       </div>
       <div class="form-group">
@@ -746,7 +817,7 @@
 
   <div class="metric-grid">
     <div class="metric-card gold-accent">
-      <div class="metric-label">Total Received — Existing Apt</div>
+      <div class="metric-label">Total Received — Azizi Riviera 12 1BR</div>
       <div class="metric-value gold" id="ti-totalApt">0 AED</div>
       <div class="metric-sub" id="ti-countApt">0 cheques logged</div>
     </div>
@@ -784,8 +855,8 @@
       <div class="form-group">
         <label>Property</label>
         <select id="ml-property">
-          <option value="Existing Apartment">Existing Apartment</option>
-          <option value="Studio">Studio Apartment</option>
+          <option value="Azizi Riviera 12 1BR">Azizi Riviera 12 1BR</option>
+          <option value="Studio">Studio (Not Purchased Yet)</option>
         </select>
       </div>
       <div class="form-group">
@@ -811,7 +882,7 @@
 
   <div class="metric-grid">
     <div class="metric-card red-accent">
-      <div class="metric-label">Total Paid — Existing Apt</div>
+      <div class="metric-label">Total Paid — Azizi Riviera 12 1BR</div>
       <div class="metric-value red" id="ml-totalApt">0 AED</div>
       <div class="metric-sub" id="ml-countApt">0 payments logged</div>
     </div>
@@ -1322,7 +1393,7 @@ function buildMortChart() {
   charts['mort'] = new Chart(document.getElementById('mortChart'),{
     type:'line',
     data:{labels,datasets:[
-      {label:'Existing Apt',data:apt,borderColor:'#E24B4A',borderWidth:2,pointRadius:0,tension:0.3,fill:false},
+      {label:'Azizi 1BR',data:apt,borderColor:'#E24B4A',borderWidth:2,pointRadius:0,tension:0.3,fill:false},
       {label:'Studio',data:studio,borderColor:'#BA7517',borderWidth:2,pointRadius:0,tension:0.3,fill:false,borderDash:[5,3]},
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -1336,7 +1407,7 @@ function buildMortSchedule() {
   const tbody = document.getElementById('mortScheduleBody');
   tbody.innerHTML = '';
   const periods = [
-    {label:'Period 1',start:'Apr 2026',apt:6450,studio:0,change:'Baseline'},
+    {label:'Azizi Riviera 12 1BR',start:'Apr 2026',apt:6450,studio:0,change:'Baseline'},
     {label:'Period 2',start:'Sep 2026',apt:6450,studio:5510,change:'Studio starts'},
     {label:'Period 3',start:'Apr 2029',apt:6708,studio:5730,change:'+4% both'},
     {label:'Period 4',start:'Apr 2032',apt:6976,studio:5959,change:'+4% both'},
@@ -1454,8 +1525,8 @@ function saveTenantIncome() {
 }
 
 function refreshTenantLog() {
-  const aptEntries = state.tenantIncome.filter(t=>t.property==='Existing Apartment');
-  const studioEntries = state.tenantIncome.filter(t=>t.property==='Studio');
+  const aptEntries = state.tenantIncome.filter(t=>t.property==='Azizi Riviera 12 1BR');
+  const studioEntries = state.tenantIncome.filter(t=>t.property==='Studio (Not Purchased Yet)');
   const aptTotal = aptEntries.reduce((s,t)=>s+t.amount,0);
   const studioTotal = studioEntries.reduce((s,t)=>s+t.amount,0);
   document.getElementById('ti-totalApt').textContent = fmtNum(aptTotal);
@@ -1500,8 +1571,8 @@ function saveMortgagePayment() {
 }
 
 function refreshMortLog() {
-  const aptEntries = state.mortgagePayments.filter(t=>t.property==='Existing Apartment');
-  const studioEntries = state.mortgagePayments.filter(t=>t.property==='Studio');
+  const aptEntries = state.mortgagePayments.filter(t=>t.property==='Azizi Riviera 12 1BR');
+  const studioEntries = state.mortgagePayments.filter(t=>t.property==='Studio (Not Purchased Yet)');
   const aptTotal = aptEntries.reduce((s,t)=>s+t.amount,0);
   const studioTotal = studioEntries.reduce((s,t)=>s+t.amount,0);
   document.getElementById('ml-totalApt').textContent = fmtNum(aptTotal);
@@ -1558,11 +1629,102 @@ function setDefaultDates() {
   document.getElementById('ml-date').value = today;
 }
 
+
+// ═══════════════════════════════════════════════════════
+// STUDIO STATUS TOGGLE
+// ═══════════════════════════════════════════════════════
+let studioPurchased = false;
+
+function toggleStudioStatus() {
+  studioPurchased = !studioPurchased;
+  const banner = document.getElementById('studioBanner');
+  const text = document.getElementById('studioStatusText');
+  const sub = document.getElementById('studioStatusSub');
+  const btn = document.getElementById('studioToggleBtn');
+  const note = document.getElementById('studioNote');
+  const psw = document.getElementById('psw-studio');
+
+  if (studioPurchased) {
+    banner.className = 'studio-status-bar purchased';
+    text.textContent = '\u25CF Studio Purchased — Active';
+    sub.textContent = 'Mortgage and tenant income now active from Sep 2026';
+    btn.textContent = 'Mark as Not Purchased';
+    btn.className = 'status-toggle-btn deactivate';
+    note.style.display = 'none';
+    psw.classList.remove('inactive-prop');
+    psw.textContent = 'Studio (Purchased)';
+  } else {
+    banner.className = 'studio-status-bar not-purchased';
+    text.textContent = '\u25CF Studio Not Yet Purchased';
+    sub.textContent = 'Projections shown are estimates based on planned Sep 2026 purchase';
+    btn.textContent = 'Mark as Purchased';
+    btn.className = 'status-toggle-btn activate';
+    note.style.display = 'block';
+    psw.classList.add('inactive-prop');
+    psw.textContent = 'Studio (Not Purchased Yet)';
+  }
+  localStorage.setItem('wt_studio_purchased', studioPurchased ? '1' : '0');
+  syncToSheet('studio_status', { purchased: studioPurchased, date: new Date().toISOString() });
+}
+
+function loadStudioStatus() {
+  const saved = localStorage.getItem('wt_studio_purchased');
+  if (saved === '1') { studioPurchased = false; toggleStudioStatus(); }
+}
+
+// ═══════════════════════════════════════════════════════
+// DASHBOARD PROPERTY SWITCHER
+// ═══════════════════════════════════════════════════════
+let dashPropView = 'both';
+
+function switchDashProp(mode, btn) {
+  dashPropView = mode;
+  document.querySelectorAll('.prop-switch-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const now = new Date();
+  const aptMonths = monthsBetween(CONFIG.START_DATE, now);
+  const studioMonths = Math.max(0, monthsBetween(CONFIG.STUDIO_START, now));
+  const yearNum = Math.max(1, Math.ceil(aptMonths / 12));
+
+  const aptRent = rentForYear(CONFIG.APT_BASE_RENT, yearNum);
+  const studioRent = studioMonths > 0 ? rentForYear(CONFIG.STUDIO_BASE_RENT, Math.max(1, Math.ceil(studioMonths / 12))) : 0;
+  const aptMortNow = aptMortgage(aptMonths);
+  const studioMortNow = studioMonths > 0 ? studioMortgage(studioMonths) : 0;
+
+  let rentDisplay, mortDisplay, surplusDisplay, mortRemain1, mortRemain2;
+
+  if (mode === 'apt') {
+    const rentMonthly = Math.round(aptRent / 3);
+    const surplus = rentMonthly - aptMortNow;
+    document.getElementById('dbRentMonthly').textContent = fmtNum(rentMonthly);
+    document.getElementById('dbMortMonthly').textContent = fmtNum(aptMortNow);
+    document.getElementById('dbSurplus').textContent = (surplus >= 0 ? '+' : '') + fmtNum(surplus);
+    document.getElementById('dbSurplus').style.color = surplus >= 0 ? 'var(--teal)' : 'var(--red)';
+    document.querySelector('[data-label="rent"]') && (document.querySelector('[data-label="rent"]').textContent = 'Azizi Riviera 12 1BR Only');
+  } else if (mode === 'studio') {
+    const rentMonthly = Math.round(studioRent / 3);
+    const surplus = rentMonthly - studioMortNow;
+    document.getElementById('dbRentMonthly').textContent = studioPurchased ? fmtNum(rentMonthly) : 'Not active';
+    document.getElementById('dbMortMonthly').textContent = studioPurchased ? fmtNum(studioMortNow) : 'Not active';
+    document.getElementById('dbSurplus').textContent = studioPurchased ? (surplus >= 0 ? '+' : '') + fmtNum(surplus) : 'Not active';
+    document.getElementById('dbSurplus').style.color = surplus >= 0 ? 'var(--teal)' : 'var(--red)';
+  } else {
+    const rentMonthly = Math.round((aptRent + studioRent) / 3);
+    const surplus = rentMonthly - (aptMortNow + studioMortNow);
+    document.getElementById('dbRentMonthly').textContent = fmtNum(rentMonthly);
+    document.getElementById('dbMortMonthly').textContent = fmtNum(aptMortNow + studioMortNow);
+    document.getElementById('dbSurplus').textContent = (surplus >= 0 ? '+' : '') + fmtNum(surplus);
+    document.getElementById('dbSurplus').style.color = surplus >= 0 ? 'var(--teal)' : 'var(--red)';
+  }
+}
+
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
 function initPortal() {
   setDefaultDates();
+  loadStudioStatus();
   initDashboard();
   buildProjectionChart();
   refreshAVP();
