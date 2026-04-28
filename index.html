@@ -181,6 +181,7 @@
   <button class="nav-tab" onclick="showSection('property',this)">Property Summary</button>
   <button class="nav-tab" onclick="showSection('tenantlog',this)">Tenant Income Log</button>
   <button class="nav-tab" onclick="showSection('mortlog',this)">Mortgage Payment Log</button>
+  <button class="nav-tab" onclick="showSection('settlement',this)">Settlement Tracker</button>
 </nav>
 
 <main>
@@ -445,12 +446,12 @@
   <h2 class="section-heading">Property Summary</h2>
   <p class="section-sub">Azizi Riviera 12 1BR — full financial breakdown</p>
 
-  <div class="alert-banner red">
+  <div class="alert-banner red" id="settlementAlertBanner">
     <div>
       <div class="alert-title">Upfront Cost Settlement Outstanding</div>
-      <div class="alert-body">Total upfront costs 291,522 AED split 50/50 (145,761 each). Martin reimbursed 100,000 AED. Martin still owes Oksana <strong>45,761 AED</strong>.</div>
+      <div class="alert-body" id="settlementAlertText">Total upfront costs 291,522 AED split 50/50 (145,761 each). Martin reimbursed 100,000 AED. Martin still owes Oksana <strong>45,761 AED</strong>. <a href="#" onclick="document.querySelector('[onclick*=settlement]').click();return false;" style="color:var(--red);font-weight:500;">View Settlement Tracker →</a></div>
     </div>
-    <span class="badge badge-red">45,761 AED outstanding</span>
+    <span class="badge badge-red" id="settlementBadge">45,761 AED outstanding</span>
   </div>
 
   <div class="metric-grid">
@@ -611,6 +612,104 @@
         <tbody id="mlTableBody"></tbody>
       </table>
     </div>
+  </div>
+</div>
+
+
+<!-- SETTLEMENT TRACKER -->
+<div class="section" id="sec-settlement">
+  <h2 class="section-heading">Settlement Tracker</h2>
+  <p class="section-sub">Martin's upfront cost repayment to Oksana — log each payment made</p>
+
+  <div class="metric-grid">
+    <div class="metric-card red-accent">
+      <div class="metric-label">Total Amount Owed</div>
+      <div class="metric-value red">45,761 AED</div>
+      <div class="metric-sub">Martin's outstanding share</div>
+    </div>
+    <div class="metric-card teal-accent">
+      <div class="metric-label">Total Paid to Oksana</div>
+      <div class="metric-value teal" id="stPaid">0 AED</div>
+      <div class="metric-sub" id="stPaidCount">0 payments logged</div>
+    </div>
+    <div class="metric-card red-accent">
+      <div class="metric-label">Still Outstanding</div>
+      <div class="metric-value red" id="stOutstanding">45,761 AED</div>
+      <div class="metric-sub" id="stOutstandingPct">0% settled</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Expected Completion</div>
+      <div class="metric-value" id="stCompletion">—</div>
+      <div class="metric-sub" id="stCompletionSub">Based on payment frequency</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header"><div class="chart-title">Settlement Progress</div></div>
+    <div style="margin-bottom:0.5rem;display:flex;justify-content:space-between;font-size:0.8rem;color:var(--ink-soft);">
+      <span>0 AED</span>
+      <span id="stProgressLabel">45,761 AED remaining</span>
+      <span>45,761 AED</span>
+    </div>
+    <div style="background:var(--surface);border-radius:8px;height:24px;overflow:hidden;margin-bottom:1rem;">
+      <div id="stProgressBar" style="height:100%;border-radius:8px;background:var(--teal);width:0%;transition:width 0.5s;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;">
+        <span id="stProgressPct" style="font-size:0.75rem;color:white;font-weight:500;"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-title">Log Payment to Oksana</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Payment Date</label><input type="date" id="st-date"></div>
+      <div class="form-group"><label>Amount (AED)</label><input type="number" id="st-amount" placeholder="e.g. 5000"></div>
+      <div class="form-group"><label>Payment Method</label>
+        <select id="st-method">
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="Cash">Cash</option>
+          <option value="Cheque">Cheque</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Reference</label><input type="text" id="st-ref" placeholder="Bank ref / note"></div>
+      <div class="form-group"><label>Notes</label><input type="text" id="st-notes" placeholder="Optional"></div>
+    </div>
+    <button class="btn btn-primary" onclick="saveSettlementPayment()">Save Payment</button>
+    <div class="status-msg" id="stStatus"></div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-card-header">
+      <div class="table-card-title">Payment History</div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Reference</th>
+            <th>Running Balance</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="stTableBody"><tr><td colspan="7" class="loading">No payments logged yet. Add your first payment above.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border-soft);padding:1.5rem;margin-top:1rem;">
+    <div style="font-family:'DM Serif Display',serif;font-size:1rem;margin-bottom:1rem;">Upfront Cost Breakdown</div>
+    <table style="width:100%;font-size:0.82rem;border-collapse:collapse;">
+      <thead><tr style="background:var(--surface);"><th style="padding:8px 12px;text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);">Item</th><th style="padding:8px 12px;text-align:right;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);">Total</th><th style="padding:8px 12px;text-align:right;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);">Martin 50%</th><th style="padding:8px 12px;text-align:right;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);">Status</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border-soft);"><td style="padding:8px 12px;">Total Upfront Costs</td><td style="padding:8px 12px;text-align:right;">291,522 AED</td><td style="padding:8px 12px;text-align:right;">145,761 AED</td><td style="padding:8px 12px;text-align:right;"><span class="badge badge-red">Partial</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border-soft);"><td style="padding:8px 12px;">Martin Reimbursed</td><td style="padding:8px 12px;text-align:right;">—</td><td style="padding:8px 12px;text-align:right;color:var(--teal);">100,000 AED</td><td style="padding:8px 12px;text-align:right;"><span class="badge badge-green">Paid</span></td></tr>
+        <tr style="font-weight:600;background:rgba(226,75,74,0.04);"><td style="padding:8px 12px;">Remaining to Oksana</td><td style="padding:8px 12px;text-align:right;">—</td><td style="padding:8px 12px;text-align:right;color:var(--red);" id="stBreakdownRemaining">45,761 AED</td><td style="padding:8px 12px;text-align:right;"><span class="badge badge-red" id="stBreakdownBadge">Outstanding</span></td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -1059,6 +1158,110 @@ function setDefaultDates() {
   document.getElementById('avpMonth').value=new Date().toISOString().slice(0,7);
   document.getElementById('ti-date').value=t;
   document.getElementById('ml-date').value=t;
+  document.getElementById('st-date').value=t;
+}
+
+
+// ═══════════════════════════════════════════
+// SETTLEMENT TRACKER
+// ═══════════════════════════════════════════
+const SETTLEMENT_TOTAL = 45761;
+
+function saveSettlementPayment() {
+  const date = document.getElementById('st-date').value;
+  const amount = parseFloat(document.getElementById('st-amount').value);
+  const method = document.getElementById('st-method').value;
+  const ref = document.getElementById('st-ref').value;
+  const notes = document.getElementById('st-notes').value;
+  if (!date || !amount) { showStatus('stStatus','Please fill in date and amount.','error'); return; }
+  if (amount > getRemainingSettlement()) { showStatus('stStatus','Amount exceeds outstanding balance of ' + fmtN(getRemainingSettlement()),'error'); return; }
+  state.settlementPayments = state.settlementPayments || [];
+  state.settlementPayments.push({date,amount,method,ref,notes,id:Date.now()});
+  state.settlementPayments.sort((a,b)=>a.date.localeCompare(b.date));
+  saveState();
+  showStatus('stStatus','Payment saved successfully.','success');
+  ['st-date','st-amount','st-ref','st-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('st-method').value='Bank Transfer';
+  refreshSettlement();
+  syncToSheet('settlement_payment',{date,amount,method,ref,notes});
+}
+
+function getRemainingSettlement() {
+  const paid = (state.settlementPayments||[]).reduce((s,p)=>s+p.amount,0);
+  return Math.max(0, SETTLEMENT_TOTAL - paid);
+}
+
+function refreshSettlement() {
+  state.settlementPayments = state.settlementPayments || [];
+  const paid = state.settlementPayments.reduce((s,p)=>s+p.amount,0);
+  const remaining = Math.max(0, SETTLEMENT_TOTAL - paid);
+  const pct = Math.min(100, (paid/SETTLEMENT_TOTAL*100));
+  const settled = remaining === 0;
+
+  document.getElementById('stPaid').textContent = fmtN(paid);
+  document.getElementById('stPaidCount').textContent = state.settlementPayments.length + ' payment' + (state.settlementPayments.length!==1?'s':'') + ' logged';
+  document.getElementById('stOutstanding').textContent = fmtN(remaining);
+  document.getElementById('stOutstanding').style.color = settled ? 'var(--teal)' : 'var(--red)';
+  document.getElementById('stOutstandingPct').textContent = pct.toFixed(1) + '% settled';
+  document.getElementById('stProgressBar').style.width = pct.toFixed(1) + '%';
+  document.getElementById('stProgressBar').style.background = settled ? 'var(--teal)' : pct > 50 ? 'var(--amber)' : 'var(--teal)';
+  document.getElementById('stProgressPct').textContent = pct > 5 ? pct.toFixed(0)+'%' : '';
+  document.getElementById('stProgressLabel').textContent = settled ? 'Fully settled' : fmtN(remaining) + ' remaining';
+  document.getElementById('stBreakdownRemaining').textContent = fmtN(remaining);
+  document.getElementById('stBreakdownBadge').textContent = settled ? 'Settled' : 'Outstanding';
+  document.getElementById('stBreakdownBadge').className = 'badge ' + (settled ? 'badge-green' : 'badge-red');
+
+  // Update property summary banner
+  document.getElementById('settlementBadge').textContent = settled ? 'Fully Settled' : fmtN(remaining) + ' outstanding';
+  document.getElementById('settlementBadge').className = 'badge ' + (settled ? 'badge-green' : 'badge-red');
+  if (settled) {
+    document.getElementById('settlementAlertBanner').className = 'alert-banner' ;
+    document.getElementById('settlementAlertBanner').style.background = 'rgba(29,158,117,0.07)';
+    document.getElementById('settlementAlertBanner').style.border = '1px solid rgba(29,158,117,0.2)';
+    document.getElementById('settlementAlertText').innerHTML = 'Upfront cost settlement fully paid. Martin has repaid Oksana the full 45,761 AED outstanding share.';
+    document.querySelector('#settlementAlertBanner .alert-title').textContent = 'Settlement Complete';
+    document.querySelector('#settlementAlertBanner .alert-title').style.color = 'var(--teal)';
+  }
+
+  // Estimate completion date
+  if (state.settlementPayments.length >= 2 && remaining > 0) {
+    const payments = state.settlementPayments;
+    const avgAmount = paid / payments.length;
+    const monthsLeft = Math.ceil(remaining / avgAmount);
+    const completion = new Date();
+    completion.setMonth(completion.getMonth() + monthsLeft);
+    document.getElementById('stCompletion').textContent = completion.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+    document.getElementById('stCompletionSub').textContent = 'At avg ' + fmtN(Math.round(avgAmount)) + '/payment';
+  } else if (settled) {
+    document.getElementById('stCompletion').textContent = 'Settled';
+    document.getElementById('stCompletionSub').textContent = 'All payments complete';
+  } else {
+    document.getElementById('stCompletion').textContent = '—';
+    document.getElementById('stCompletionSub').textContent = 'Log more payments to estimate';
+  }
+
+  // Build table
+  const tb = document.getElementById('stTableBody');
+  tb.innerHTML = '';
+  if (!state.settlementPayments.length) {
+    tb.innerHTML = '<tr><td colspan="7" class="loading">No payments logged yet.</td></tr>';
+    return;
+  }
+  let runBal = SETTLEMENT_TOTAL;
+  state.settlementPayments.forEach((p,i) => {
+    runBal -= p.amount;
+    const row = document.createElement('tr');
+    row.innerHTML = \`
+      <td style="color:var(--ink-faint)">\${i+1}</td>
+      <td>\${new Date(p.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</td>
+      <td><strong style="color:var(--teal)">\${fmtN(p.amount)}</strong></td>
+      <td><span class="badge badge-blue">\${p.method||'—'}</span></td>
+      <td style="color:var(--ink-faint)">\${p.ref||'—'}</td>
+      <td style="color:\${runBal<=0?'var(--teal)':'var(--red)'};">\${runBal<=0?'SETTLED':fmtN(runBal)}</td>
+      <td style="color:var(--ink-faint)">\${p.notes||'—'}</td>
+    \`;
+    tb.appendChild(row);
+  });
 }
 
 function initPortal() {
@@ -1069,6 +1272,7 @@ function initPortal() {
   refreshAVP();
   refreshTenantLog();
   refreshMortLog();
+  refreshSettlement();
 }
 </script>
 </body>
