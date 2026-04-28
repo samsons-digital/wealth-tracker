@@ -738,40 +738,35 @@ function loadState() { try { const s=localStorage.getItem('wt_state2'); if(s) st
 function saveState() { localStorage.setItem('wt_state2', JSON.stringify(state)); }
 loadState();
 
-// PIN
-let pin='';
+// PIN — simple and robust
+let pin = '';
 function pinPress(d) {
-  if(pin.length>=4) return;
-  pin+=d;
-  for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled', i<pin.length);
-  if(pin.length===4) {
-    setTimeout(()=>{
-      if(pin===CONFIG.PIN) {
-        document.getElementById('pinScreen').style.display='none';
-        document.getElementById('pinScreen').style.pointerEvents='none';
-        initPortal();
-      } else {
-        document.getElementById('pinError').textContent='Incorrect PIN. Try again.';
-        pin='';
-        for(let i=0;i<4;i++) document.getElementById('d'+i).classList.remove('filled');
-        setTimeout(()=>{ document.getElementById('pinError').textContent='\u00a0'; },2000);
-      }
-    },150);
+  if (pin.length >= 4) return;
+  pin += d;
+  updateDots();
+  if (pin.length === 4) {
+    if (pin === CONFIG.PIN) {
+      document.getElementById('pinScreen').style.display = 'none';
+      initPortal();
+    } else {
+      document.getElementById('pinError').textContent = 'Incorrect PIN';
+      pin = '';
+      updateDots();
+    }
   }
 }
 function pinDel() {
-  if(!pin.length) return;
-  pin=pin.slice(0,-1);
-  for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled', i<pin.length);
-  document.getElementById('pinError').textContent='\u00a0';
+  if (!pin.length) return;
+  pin = pin.slice(0, -1);
+  updateDots();
+  document.getElementById('pinError').textContent = '';
 }
-// Keyboard support
-document.addEventListener('keydown', function(e) {
-  if(document.getElementById('pinScreen').style.display==='none') return;
-  if(e.key>='0'&&e.key<='9') pinPress(e.key);
-  else if(e.key==='Backspace') pinDel();
-  else if(e.key==='Enter'&&pin.length===4) pinPress('');
-});
+function updateDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('d' + i).classList.toggle('filled', i < pin.length);
+  }
+}
+
 
 // NAV
 function showSection(id,btn) {
@@ -839,11 +834,14 @@ function getVal(pts,d) {
   return c.value;
 }
 
-const P = {
-  opt: simulate(CONFIG.RATES.opt,15),
-  mod: simulate(CONFIG.RATES.mod,15),
-  con: simulate(CONFIG.RATES.con,15)
-};
+let P = { opt: null, mod: null, con: null };
+function buildProjections() {
+  if (!P.opt) {
+    P.opt = simulate(CONFIG.RATES.opt,15);
+    P.mod = simulate(CONFIG.RATES.mod,15);
+    P.con = simulate(CONFIG.RATES.con,15);
+  }
+}
 
 const charts={};
 function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
@@ -1280,9 +1278,9 @@ function refreshSettlement() {
 }
 
 function initPortal() {
-  // Ensure pin screen is hidden
   const ps=document.getElementById("pinScreen");
   if(ps) { ps.style.display="none"; ps.style.pointerEvents="none"; }
+  buildProjections();
   prepopulateKnownPayments();
   setDefaultDates();
   initDashboard();
