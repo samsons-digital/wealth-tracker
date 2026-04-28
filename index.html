@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wealth Tracker — Martin & Oksana</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --gold: #b8922e;
+    --gold-light: #d4a843;
+    --gold-pale: #eef1f3;
+    --cream: #f4f6f8;
+    --ink: #1c1c1c;
+    --ink-mid: #3a3a3a;
+    --ink-soft: #6b6b6b;
+    --ink-faint: #aaaaaa;
+    --white: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-soft: rgba(0,0,0,0.05);
+    --teal: #1D9E75;
+    --blue: #378ADD;
+    --amber: #BA7517;
+    --red: #E24B4A;
+    --surface: #eef1f4;
+    --card: #ffffff;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f4f6f8;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* PIN SCREEN */
+  #pinScreen {
+    position: fixed; inset: 0;
+    background: #f4f6f8;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  #pinScreen h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--gold);
+    text-align: center;
+  }
+  #pinScreen p { color: var(--ink-soft); font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; text-align: center; }
+  .pin-dots { display: flex; gap: 12px; justify-content: center; margin: 0.5rem 0; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--gold); background: rgba(184,146,46,0.1); transition: background 0.2s; }
+  .pin-dot.filled { background: var(--gold); }
+  .pin-pad { display: grid; grid-template-columns: repeat(3, 64px); gap: 10px; }
+  .pin-btn {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 1px solid rgba(184,146,46,0.35);
+    background: rgba(255,255,255,0.9);
+    color: var(--ink); font-size: 1.2rem; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .pin-btn:hover { background: rgba(184,146,46,0.15); border-color: var(--gold); }
+  .pin-btn:active { transform: scale(0.95); }
+  .pin-btn.del { font-size: 0.9rem; color: var(--gold); }
+  #pinError { color: var(--red); font-size: 0.8rem; text-align: center; min-height: 1.2em; }
+
+  /* HEADER */
+  header {
+    background: var(--ink);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+    position: sticky; top: 0; z-index: 100;
+    border-bottom: 1px solid rgba(184,146,46,0.15);
+  }
+  .header-brand { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    color: var(--ink); font-size: 1rem; font-weight: 400;
+  }
+  .header-title { color: var(--white); font-size: 1rem; font-weight: 500; }
+  .header-sub { color: var(--gold); font-size: 0.75rem; letter-spacing: 0.05em; }
+  .header-date { color: var(--ink-faint); font-size: 0.8rem; }
+
+  /* NAV */
+  nav {
+    background: var(--white);
+    border-bottom: 1px solid var(--border-soft);
+    display: flex; overflow-x: auto;
+    padding: 0 1.5rem;
+    gap: 0;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    padding: 0 1.25rem; height: 48px;
+    border: none; background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 400;
+    color: var(--ink-soft); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap; transition: all 0.2s;
+  }
+  .nav-tab:hover { color: var(--ink); }
+  .nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 500; }
+
+  /* MAIN */
+  main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+
+  /* SECTION */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* CARDS */
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .metric-card {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid var(--border-soft);
+    padding: 1.25rem;
+  }
+  .metric-card.gold-accent { border-left: 3px solid var(--gold); }
+  .metric-card.teal-accent { border-left: 3px solid var(--teal); }
+  .metric-card.red-accent { border-left: 3px solid var(--red); }
+  .metric-card.blue-accent { border-left: 3px solid var(--blue); }
+  .metric-label { font-size: 0.75rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .metric-value { font-size: 1.5rem; font-weight: 600; color: var(--ink); line-height: 1; }
+  .metric-value.gold { color: var(--gold); }
+  .metric-value.teal { color: var(--teal); }
+  .metric-value.red { color: var(--red); }
+  .metric-sub { font-size: 0.75rem; color: var(--ink-faint); margin-top: 4px; }
+
+  /* CHART CARD */
+  .chart-card {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid var(--border-soft);
+    padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 8px; }
+  .chart-title { font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--ink); }
+  .chart-legend { display: flex; flex-wrap: wrap; gap: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--ink-soft); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+  .chart-wrap { position: relative; height: 300px; }
+
+  /* SCENARIO TOGGLES */
+  .scenario-toggles { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .toggle-btn {
+    padding: 6px 14px; border-radius: 20px; border: 1.5px solid;
+    font-size: 0.8rem; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.2s; font-weight: 500;
+  }
+  .toggle-btn.opt { border-color: var(--teal); color: var(--teal); background: transparent; }
+  .toggle-btn.opt.on { background: var(--teal); color: white; }
+  .toggle-btn.mod { border-color: var(--blue); color: var(--blue); background: transparent; }
+  .toggle-btn.mod.on { background: var(--blue); color: white; }
+  .toggle-btn.con { border-color: var(--amber); color: var(--amber); background: transparent; }
+  .toggle-btn.con.on { background: var(--amber); color: white; }
+
+  /* TABLE */
+  .table-card {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid var(--border-soft);
+    overflow: hidden; margin-bottom: 1.5rem;
+  }
+  .table-card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-soft);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .table-card-title { font-family: 'DM Serif Display', serif; font-size: 1rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  thead tr { background: var(--surface); }
+  th { padding: 10px 12px; text-align: left; font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+  .bold-row td { font-weight: 600; background: rgba(184,146,46,0.04); }
+
+  /* FORM */
+  .form-card {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid var(--border-soft);
+    padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .form-title { font-family: 'DM Serif Display', serif; font-size: 1rem; margin-bottom: 1.25rem; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: 0.78rem; color: var(--ink-soft); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+  input, select {
+    height: 40px; padding: 0 12px;
+    border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    color: var(--ink); background: var(--surface);
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--gold); background: white; }
+  .btn {
+    height: 40px; padding: 0 1.5rem;
+    border-radius: var(--radius-sm); border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--gold); color: white; }
+  .btn-primary:hover { background: var(--gold-light); }
+  .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); }
+  .btn-danger:hover { background: var(--red); color: white; }
+  .status-msg { font-size: 0.82rem; padding: 8px 12px; border-radius: var(--radius-sm); margin-top: 8px; display: none; }
+  .status-msg.success { background: rgba(29,158,117,0.1); color: var(--teal); display: block; }
+  .status-msg.error { background: rgba(226,75,74,0.1); color: var(--red); display: block; }
+
+  /* PROPERTY TABS */
+  .prop-tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border-soft); }
+  .prop-tab {
+    padding: 10px 1.5rem; border: none; background: transparent;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    color: var(--ink-soft); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+  .prop-tab.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 500; }
+
+  /* BADGES */
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 500; }
+  .badge-green { background: rgba(29,158,117,0.12); color: var(--teal); }
+  .badge-red { background: rgba(226,75,74,0.12); color: var(--red); }
+  .badge-gold { background: rgba(184,146,46,0.12); color: var(--gold); }
+  .badge-blue { background: rgba(55,138,221,0.12); color: var(--blue); }
+
+  /* SECTION HEADING */
+  .section-heading { font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: var(--ink); margin-bottom: 0.25rem; }
+  .section-sub { font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 1.5rem; }
+
+  /* NET WORTH BANNER */
+  .networth-banner {
+    background: var(--ink);
+    border-radius: var(--radius);
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  .networth-label { color: var(--gold); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .networth-value { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--white); }
+  .networth-sub { font-size: 0.8rem; color: var(--ink-faint); margin-top: 2px; }
+  .networth-items { display: flex; gap: 2rem; flex-wrap: wrap; }
+  .networth-item { text-align: right; }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 2rem; color: var(--ink-faint); font-size: 0.88rem; }
+
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid var(--border-soft); margin: 1.5rem 0; }
+
+  /* ACTUAL VS PROJECTED */
+  .avp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+
+  /* PROGRESS BAR */
+  .progress-wrap { background: var(--surface); border-radius: 4px; height: 8px; overflow: hidden; margin-top: 6px; }
+  .progress-bar { height: 100%; border-radius: 4px; transition: width 0.5s; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 3px; }
+
+  @media (max-width: 600px) {
+    main { padding: 1rem; }
+    .metric-value { font-size: 1.2rem; }
+    .networth-value { font-size: 1.5rem; }
+    header { padding: 0 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="pinScreen">
+  <div style="text-align:center;">
+    <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#b8922e,#d4a843);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-family:'DM Serif Display',serif;font-size:1.8rem;color:#ffffff;">W</div>
+    <h1>Wealth Tracker</h1>
+    <p style="margin-top:6px;color:var(--ink-soft);">Martin &amp; Oksana</p>
+  </div>
+  <div>
+    <p style="margin-bottom:12px;color:var(--ink-soft);">Enter PIN to continue</p>
+    <div class="pin-dots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+    </div>
+    <div id="pinError">&nbsp;</div>
+  </div>
+  <div class="pin-pad">
+    <button class="pin-btn" onclick="pinPress('1')">1</button>
+    <button class="pin-btn" onclick="pinPress('2')">2</button>
+    <button class="pin-btn" onclick="pinPress('3')">3</button>
+    <button class="pin-btn" onclick="pinPress('4')">4</button>
+    <button class="pin-btn" onclick="pinPress('5')">5</button>
+    <button class="pin-btn" onclick="pinPress('6')">6</button>
+    <button class="pin-btn" onclick="pinPress('7')">7</button>
+    <button class="pin-btn" onclick="pinPress('8')">8</button>
+    <button class="pin-btn" onclick="pinPress('9')">9</button>
+    <button class="pin-btn" style="visibility:hidden;"></button>
+    <button class="pin-btn" onclick="pinPress('0')">0</button>
+    <button class="pin-btn del" onclick="pinDel()">&#9003;</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-brand">
+    <div class="header-logo">W</div>
+    <div>
+      <div class="header-title">Wealth Tracker</div>
+      <div class="header-sub">Martin &amp; Oksana</div>
+    </div>
+  </div>
+  <div class="header-date" id="headerDate"></div>
+</header>
+
+<!-- NAV -->
+<nav>
+  <button class="nav-tab active" onclick="showSection('dashboard',this)">Dashboard</button>
+  <button class="nav-tab" onclick="showSection('projections',this)">Projections</button>
+  <button class="nav-tab" onclick="showSection('avp',this)">Actual vs Projected</button>
+  <button class="nav-tab" onclick="showSection('mortgage',this)">Mortgage Tracker</button>
+  <button class="nav-tab" onclick="showSection('property',this)">Property Summary</button>
+  <button class="nav-tab" onclick="showSection('tenantlog',this)">Tenant Income Log</button>
+  <button class="nav-tab" onclick="showSection('mortlog',this)">Mortgage Payment Log</button>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════ DASHBOARD ═══ -->
+<div class="section active" id="sec-dashboard">
+  <h2 class="section-heading">Dashboard</h2>
+  <p class="section-sub">Live snapshot of your wealth position</p>
+
+  <div class="networth-banner">
+    <div>
+      <div class="networth-label">Estimated Net Worth</div>
+      <div class="networth-value" id="netWorthVal">Calculating...</div>
+      <div class="networth-sub">Trading portfolio + property assets</div>
+    </div>
+    <div class="networth-items">
+      <div class="networth-item">
+        <div style="color:var(--ink-faint);font-size:0.75rem;">Trading Portfolio</div>
+        <div style="color:var(--gold);font-size:1.1rem;font-weight:500;" id="dbPortfolio">—</div>
+      </div>
+      <div class="networth-item">
+        <div style="color:var(--ink-faint);font-size:0.75rem;">Property Assets</div>
+        <div style="color:#fff;font-size:1.1rem;font-weight:500;" id="dbProperty">2.3M AED</div>
+      </div>
+      <div class="networth-item">
+        <div style="color:var(--ink-faint);font-size:0.75rem;">Total Mortgages</div>
+        <div style="color:var(--red);font-size:1.1rem;font-weight:500;" id="dbMortgages">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card gold-accent">
+      <div class="metric-label">ATFX Balance (Actual)</div>
+      <div class="metric-value gold" id="dbActual">No data</div>
+      <div class="metric-sub" id="dbActualDate">Enter first actual balance</div>
+    </div>
+    <div class="metric-card teal-accent">
+      <div class="metric-label">Projected (Moderate)</div>
+      <div class="metric-value teal" id="dbProjMod">—</div>
+      <div class="metric-sub">8%/month scenario</div>
+    </div>
+    <div class="metric-card gold-accent">
+      <div class="metric-label">Combined Monthly Rent</div>
+      <div class="metric-value gold" id="dbRentMonthly">—</div>
+      <div class="metric-sub">Both properties</div>
+    </div>
+    <div class="metric-card red-accent">
+      <div class="metric-label">Combined Mortgage/mo</div>
+      <div class="metric-value red" id="dbMortMonthly">—</div>
+      <div class="metric-sub">Both properties</div>
+    </div>
+    <div class="metric-card teal-accent">
+      <div class="metric-label">Net Monthly Surplus</div>
+      <div class="metric-value teal" id="dbSurplus">—</div>
+      <div class="metric-sub">Rent minus mortgages</div>
+    </div>
+    <div class="metric-card blue-accent">
+      <div class="metric-label">Days Since Start</div>
+      <div class="metric-value" id="dbDays">—</div>
+      <div class="metric-sub">From 9 Apr 2026</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">Portfolio Growth — All Scenarios</div>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Optimistic</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#378ADD"></span>Moderate</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#BA7517"></span>Conservative</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#b8922e;border-radius:50%;"></span>Actual</span>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="dashChart" role="img" aria-label="Portfolio growth dashboard chart"></canvas></div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-label">Existing Apt — Next Cheque</div>
+      <div class="metric-value" id="dbNextApt">—</div>
+      <div class="metric-sub" id="dbNextAptDate">18 Sep 2026</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Studio — Next Cheque</div>
+      <div class="metric-value" id="dbNextStudio">—</div>
+      <div class="metric-sub" id="dbNextStudioDate">Dec 2026</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Existing Mort. Remaining</div>
+      <div class="metric-value red" id="dbMortRemain1">—</div>
+      <div class="metric-sub">Est. outstanding</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Studio Mort. Remaining</div>
+      <div class="metric-value red" id="dbMortRemain2">—</div>
+      <div class="metric-sub">Est. outstanding</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ PROJECTIONS ═══ -->
+<div class="section" id="sec-projections">
+  <h2 class="section-heading">Projections</h2>
+  <p class="section-sub">15-year forecast across all scenarios with growing rental income and rising mortgage payments</p>
+
+  <div class="scenario-toggles">
+    <button class="toggle-btn opt on" id="tog-opt" onclick="toggleScenario('opt')">Optimistic 15.15%/mo</button>
+    <button class="toggle-btn mod on" id="tog-mod" onclick="toggleScenario('mod')">Moderate 8%/mo</button>
+    <button class="toggle-btn con on" id="tog-con" onclick="toggleScenario('con')">Conservative 5%/mo</button>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">15-Year Portfolio Projection</div>
+      <select id="projYears" onchange="buildProjectionChart()" style="width:auto;height:34px;font-size:0.8rem;">
+        <option value="5">5 Years</option>
+        <option value="10" selected>10 Years</option>
+        <option value="15">15 Years</option>
+      </select>
+    </div>
+    <div class="chart-wrap" style="height:350px;"><canvas id="projChart" role="img" aria-label="15 year projection chart"></canvas></div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-card-header">
+      <div class="table-card-title">Year-by-Year Milestone Table</div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Apt Rent/Qtr</th>
+            <th>Studio Rent/Qtr</th>
+            <th style="color:var(--red)">Total Mort/mo</th>
+            <th style="color:var(--teal)">Optimistic</th>
+            <th style="color:var(--blue)">Moderate</th>
+            <th style="color:var(--amber)">Conservative</th>
+          </tr>
+        </thead>
+        <tbody id="projTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ ACTUAL VS PROJECTED ═══ -->
+<div class="section" id="sec-avp">
+  <h2 class="section-heading">Actual vs Projected</h2>
+  <p class="section-sub">Log your real ATFX balance each month and track performance against all three scenarios</p>
+
+  <div class="form-card">
+    <div class="form-title">Log Actual ATFX Balance</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Month</label>
+        <input type="month" id="avpMonth">
+      </div>
+      <div class="form-group">
+        <label>Actual Balance (AED)</label>
+        <input type="number" id="avpBalance" placeholder="e.g. 42500">
+      </div>
+      <div class="form-group">
+        <label>Notes (optional)</label>
+        <input type="text" id="avpNotes" placeholder="e.g. Strong gold month">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveActualBalance()">Save Balance</button>
+    <div class="status-msg" id="avpStatus"></div>
+  </div>
+
+  <div class="avp-grid">
+    <div class="metric-card gold-accent">
+      <div class="metric-label">Latest Actual</div>
+      <div class="metric-value gold" id="avpLatestActual">No data</div>
+      <div class="metric-sub" id="avpLatestDate">—</div>
+    </div>
+    <div class="metric-card teal-accent">
+      <div class="metric-label">vs Moderate Projection</div>
+      <div class="metric-value" id="avpVsMod">—</div>
+      <div class="metric-sub" id="avpVsModPct">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">vs Optimistic Projection</div>
+      <div class="metric-value" id="avpVsOpt">—</div>
+      <div class="metric-sub" id="avpVsOptPct">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">vs Conservative Projection</div>
+      <div class="metric-value" id="avpVsCon">—</div>
+      <div class="metric-sub" id="avpVsConPct">—</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">Actual vs Projected Balance</div>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Optimistic</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#378ADD"></span>Moderate</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#BA7517"></span>Conservative</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#b8922e;border-radius:50%;width:10px;height:10px;"></span>Actual</span>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="avpChart" role="img" aria-label="Actual vs projected balance chart"></canvas></div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-card-header"><div class="table-card-title">Balance History</div></div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Month</th><th>Actual Balance</th><th>Projected (Moderate)</th><th>Variance</th><th>Notes</th></tr></thead>
+        <tbody id="avpTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ MORTGAGE TRACKER ═══ -->
+<div class="section" id="sec-mortgage">
+  <h2 class="section-heading">Mortgage Tracker</h2>
+  <p class="section-sub">Payment schedules, remaining balances and upcoming rate increases for both properties</p>
+
+  <div class="metric-grid">
+    <div class="metric-card red-accent">
+      <div class="metric-label">Existing Apt — Current Payment</div>
+      <div class="metric-value red" id="mt1Payment">6,450 AED</div>
+      <div class="metric-sub" id="mt1NextIncrease">Next increase: Apr 2029</div>
+    </div>
+    <div class="metric-card red-accent">
+      <div class="metric-label">Studio — Current Payment</div>
+      <div class="metric-value red" id="mt2Payment">5,510 AED</div>
+      <div class="metric-sub" id="mt2NextIncrease">Next increase: Sep 2029</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Existing Apt — Remaining Balance</div>
+      <div class="metric-value" id="mt1Remaining">—</div>
+      <div class="metric-sub" id="mt1PaidPct">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Studio — Remaining Balance</div>
+      <div class="metric-value" id="mt2Remaining">—</div>
+      <div class="metric-sub" id="mt2PaidPct">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Existing Apt — Clears</div>
+      <div class="metric-value" id="mt1Clears">Apr 2038</div>
+      <div class="metric-sub">150 months from start</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Studio — Clears</div>
+      <div class="metric-value" id="mt2Clears">Sep 2041</div>
+      <div class="metric-sub">180 months from Sep 2026</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header"><div class="chart-title">Mortgage Balance Over Time</div></div>
+    <div class="chart-wrap"><canvas id="mortChart" role="img" aria-label="Mortgage balance decline chart"></canvas></div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-card-header"><div class="table-card-title">Payment Schedule — Rate Increase Points</div></div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Period</th><th>Start Date</th><th>Existing Apt /mo</th><th>Studio /mo</th><th>Combined /mo</th><th>Change</th></tr></thead>
+        <tbody id="mortScheduleBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ PROPERTY SUMMARY ═══ -->
+<div class="section" id="sec-property">
+  <h2 class="section-heading">Property Summary</h2>
+  <p class="section-sub">Income, mortgage and net position for each property</p>
+
+  <div class="prop-tabs">
+    <button class="prop-tab active" onclick="showPropTab('apt',this)">Existing Apartment</button>
+    <button class="prop-tab" onclick="showPropTab('studio',this)">Studio Apartment</button>
+    <button class="prop-tab" onclick="showPropTab('combined',this)">Combined View</button>
+  </div>
+
+  <div id="propContent-apt">
+    <div class="metric-grid">
+      <div class="metric-card gold-accent">
+        <div class="metric-label">Current Quarterly Rent</div>
+        <div class="metric-value gold" id="apt-rentNow">21,250 AED</div>
+        <div class="metric-sub">Growing 6.5%/year</div>
+      </div>
+      <div class="metric-card red-accent">
+        <div class="metric-label">Monthly Mortgage</div>
+        <div class="metric-value red" id="apt-mortNow">6,450 AED</div>
+        <div class="metric-sub">Next increase Apr 2029</div>
+      </div>
+      <div class="metric-card teal-accent">
+        <div class="metric-label">Quarterly Net Surplus</div>
+        <div class="metric-value teal" id="apt-surplus">1,900 AED</div>
+        <div class="metric-sub">Into trading account</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Annual Rental Yield</div>
+        <div class="metric-value">~9.2%</div>
+        <div class="metric-sub">On purchase price</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div class="chart-title">Rent Income vs Mortgage — Existing Apartment</div></div>
+      <div class="chart-wrap"><canvas id="aptChart" role="img" aria-label="Existing apartment rent vs mortgage chart"></canvas></div>
+    </div>
+  </div>
+
+  <div id="propContent-studio" style="display:none;">
+    <div class="metric-grid">
+      <div class="metric-card gold-accent">
+        <div class="metric-label">Current Quarterly Rent</div>
+        <div class="metric-value gold" id="studio-rentNow">18,750 AED</div>
+        <div class="metric-sub">Growing 6.5%/year</div>
+      </div>
+      <div class="metric-card red-accent">
+        <div class="metric-label">Monthly Mortgage</div>
+        <div class="metric-value red" id="studio-mortNow">5,510 AED</div>
+        <div class="metric-sub">Next increase Sep 2029</div>
+      </div>
+      <div class="metric-card teal-accent">
+        <div class="metric-label">Quarterly Net Surplus</div>
+        <div class="metric-value teal" id="studio-surplus">2,230 AED</div>
+        <div class="metric-sub">Into trading account</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Loan Amount</div>
+        <div class="metric-value">720,000 AED</div>
+        <div class="metric-sub">After 20% down payment</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div class="chart-title">Rent Income vs Mortgage — Studio</div></div>
+      <div class="chart-wrap"><canvas id="studioChart" role="img" aria-label="Studio apartment rent vs mortgage chart"></canvas></div>
+    </div>
+  </div>
+
+  <div id="propContent-combined" style="display:none;">
+    <div class="metric-grid">
+      <div class="metric-card gold-accent">
+        <div class="metric-label">Combined Annual Rent</div>
+        <div class="metric-value gold" id="comb-rent">—</div>
+        <div class="metric-sub">Both properties</div>
+      </div>
+      <div class="metric-card red-accent">
+        <div class="metric-label">Combined Monthly Mort.</div>
+        <div class="metric-value red" id="comb-mort">11,960 AED</div>
+        <div class="metric-sub">Both properties</div>
+      </div>
+      <div class="metric-card teal-accent">
+        <div class="metric-label">Net Annual Surplus</div>
+        <div class="metric-value teal" id="comb-surplus">—</div>
+        <div class="metric-sub">Into trading account</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Est. Combined Value</div>
+        <div class="metric-value">~2.3M AED</div>
+        <div class="metric-sub">Both properties</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div class="chart-title">10-Year Combined Rent vs Mortgage Growth</div></div>
+      <div class="chart-wrap"><canvas id="combChart" role="img" aria-label="Combined property rent vs mortgage over 10 years"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ TENANT INCOME LOG ═══ -->
+<div class="section" id="sec-tenantlog">
+  <h2 class="section-heading">Tenant Income Log</h2>
+  <p class="section-sub">Record all tenant income received for both properties</p>
+
+  <div class="form-card">
+    <div class="form-title">Log Tenant Income</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Property</label>
+        <select id="ti-property">
+          <option value="Existing Apartment">Existing Apartment</option>
+          <option value="Studio">Studio Apartment</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Date Received</label>
+        <input type="date" id="ti-date">
+      </div>
+      <div class="form-group">
+        <label>Amount (AED)</label>
+        <input type="number" id="ti-amount" placeholder="e.g. 21250">
+      </div>
+      <div class="form-group">
+        <label>Cheque / Reference</label>
+        <input type="text" id="ti-ref" placeholder="Cheque #">
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <input type="text" id="ti-notes" placeholder="Optional">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveTenantIncome()">Save Entry</button>
+    <div class="status-msg" id="tiStatus"></div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card gold-accent">
+      <div class="metric-label">Total Received — Existing Apt</div>
+      <div class="metric-value gold" id="ti-totalApt">0 AED</div>
+      <div class="metric-sub" id="ti-countApt">0 cheques logged</div>
+    </div>
+    <div class="metric-card gold-accent">
+      <div class="metric-label">Total Received — Studio</div>
+      <div class="metric-value gold" id="ti-totalStudio">0 AED</div>
+      <div class="metric-sub" id="ti-countStudio">0 cheques logged</div>
+    </div>
+    <div class="metric-card teal-accent">
+      <div class="metric-label">Total Reinvested</div>
+      <div class="metric-value teal" id="ti-totalAll">0 AED</div>
+      <div class="metric-sub">All properties combined</div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-card-header"><div class="table-card-title">Income History</div></div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Date</th><th>Property</th><th>Amount</th><th>Reference</th><th>Notes</th></tr></thead>
+        <tbody id="tiTableBody"><tr><td colspan="5" class="loading">No entries yet. Log your first tenant income above.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ MORTGAGE PAYMENT LOG ═══ -->
+<div class="section" id="sec-mortlog">
+  <h2 class="section-heading">Mortgage Payment Log</h2>
+  <p class="section-sub">Record all mortgage payments made for both properties</p>
+
+  <div class="form-card">
+    <div class="form-title">Log Mortgage Payment</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Property</label>
+        <select id="ml-property">
+          <option value="Existing Apartment">Existing Apartment</option>
+          <option value="Studio">Studio Apartment</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Payment Date</label>
+        <input type="date" id="ml-date">
+      </div>
+      <div class="form-group">
+        <label>Amount Paid (AED)</label>
+        <input type="number" id="ml-amount" placeholder="e.g. 6450">
+      </div>
+      <div class="form-group">
+        <label>Payment Reference</label>
+        <input type="text" id="ml-ref" placeholder="Bank ref #">
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <input type="text" id="ml-notes" placeholder="Optional">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveMortgagePayment()">Save Payment</button>
+    <div class="status-msg" id="mlStatus"></div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card red-accent">
+      <div class="metric-label">Total Paid — Existing Apt</div>
+      <div class="metric-value red" id="ml-totalApt">0 AED</div>
+      <div class="metric-sub" id="ml-countApt">0 payments logged</div>
+    </div>
+    <div class="metric-card red-accent">
+      <div class="metric-label">Total Paid — Studio</div>
+      <div class="metric-value red" id="ml-totalStudio">0 AED</div>
+      <div class="metric-sub" id="ml-countStudio">0 payments logged</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Total Paid — Combined</div>
+      <div class="metric-value" id="ml-totalAll">0 AED</div>
+      <div class="metric-sub">All mortgage payments</div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-card-header"><div class="table-card-title">Payment History</div></div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Date</th><th>Property</th><th>Amount</th><th>Reference</th><th>Notes</th></tr></thead>
+        <tbody id="mlTableBody"><tr><td colspan="5" class="loading">No payments logged yet.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONFIGURATION
+// ═══════════════════════════════════════════════════════
+const CONFIG = {
+  PIN: '1379',
+  SCRIPT_URL: 'YOUR_APPS_SCRIPT_URL_HERE',
+  START_DATE: new Date(2026, 3, 9),
+  STUDIO_START: new Date(2026, 8, 1),
+  APT_BASE_RENT: 21250,
+  STUDIO_BASE_RENT: 18750,
+  RENT_GROWTH: 0.065,
+  APT_MORT_BASE: 6450,
+  STUDIO_MORT_BASE: 5510,
+  MORT_INCREASE: 0.04,
+  APT_MORT_MONTHS: 150,
+  STUDIO_MORT_MONTHS: 180,
+  START_CAPITAL: 36700,
+  RATES: { opt: 0.1515, mod: 0.08, con: 0.05 }
+};
+
+// ═══════════════════════════════════════════════════════
+// LOCAL STATE (backed by localStorage)
+// ═══════════════════════════════════════════════════════
+let state = {
+  actualBalances: [],
+  tenantIncome: [],
+  mortgagePayments: []
+};
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('wt_state');
+    if (s) state = JSON.parse(s);
+  } catch(e) {}
+}
+function saveState() {
+  localStorage.setItem('wt_state', JSON.stringify(state));
+}
+loadState();
+
+// ═══════════════════════════════════════════════════════
+// PIN
+// ═══════════════════════════════════════════════════════
+let pinEntry = '';
+function pinPress(d) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += d;
+  document.getElementById('d'+(pinEntry.length-1)).classList.add('filled');
+  if (pinEntry.length === 4) {
+    setTimeout(() => {
+      if (pinEntry === CONFIG.PIN) {
+        document.getElementById('pinScreen').style.display = 'none';
+        initPortal();
+      } else {
+        document.getElementById('pinError').textContent = 'Incorrect PIN. Try again.';
+        pinEntry = '';
+        for(let i=0;i<4;i++) document.getElementById('d'+i).classList.remove('filled');
+      }
+    }, 200);
+  }
+}
+function pinDel() {
+  if (pinEntry.length === 0) return;
+  document.getElementById('d'+(pinEntry.length-1)).classList.remove('filled');
+  pinEntry = pinEntry.slice(0,-1);
+  document.getElementById('pinError').textContent = '\u00a0';
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+function showPropTab(tab, btn) {
+  ['apt','studio','combined'].forEach(t => {
+    document.getElementById('propContent-'+t).style.display = t===tab?'block':'none';
+  });
+  document.querySelectorAll('.prop-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (tab==='apt') buildAptChart();
+  if (tab==='studio') buildStudioChart();
+  if (tab==='combined') buildCombChart();
+}
+
+// ═══════════════════════════════════════════════════════
+// MATH HELPERS
+// ═══════════════════════════════════════════════════════
+function aptMortgage(monthNum) {
+  if (monthNum > CONFIG.APT_MORT_MONTHS) return 0;
+  return Math.round(CONFIG.APT_MORT_BASE * Math.pow(1+CONFIG.MORT_INCREASE, Math.floor((monthNum-1)/36)));
+}
+function studioMortgage(monthNum) {
+  if (monthNum < 1 || monthNum > CONFIG.STUDIO_MORT_MONTHS) return 0;
+  return Math.round(CONFIG.STUDIO_MORT_BASE * Math.pow(1+CONFIG.MORT_INCREASE, Math.floor((monthNum-1)/36)));
+}
+function rentForYear(base, yr) {
+  return Math.round(base * Math.pow(1+CONFIG.RENT_GROWTH, Math.max(0, yr-1)));
+}
+function monthsBetween(d1, d2) {
+  return (d2.getFullYear()-d1.getFullYear())*12 + (d2.getMonth()-d1.getMonth());
+}
+function fmtAED(v) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  if (Math.abs(v) >= 1e9) return (v/1e9).toFixed(2)+'B AED';
+  if (Math.abs(v) >= 1e6) return (v/1e6).toFixed(2)+'M AED';
+  if (Math.abs(v) >= 1e3) return Math.round(v/1e3).toLocaleString()+'K AED';
+  return Math.round(v).toLocaleString()+' AED';
+}
+function fmtShort(v) {
+  if (Math.abs(v) >= 1e9) return (v/1e9).toFixed(1)+'B';
+  if (Math.abs(v) >= 1e6) return (v/1e6).toFixed(2)+'M';
+  if (Math.abs(v) >= 1e3) return Math.round(v/1e3)+'K';
+  return Math.round(v)+'';
+}
+function fmtNum(v) { return Math.round(v).toLocaleString()+' AED'; }
+
+function simulate(rate, yearsTotal) {
+  const endDate = new Date(CONFIG.START_DATE.getFullYear()+yearsTotal, CONFIG.START_DATE.getMonth(), CONFIG.START_DATE.getDate());
+  let capital = CONFIG.START_CAPITAL;
+  let current = new Date(CONFIG.START_DATE);
+  const dailyRate = Math.pow(1+rate,1/30)-1;
+  let aptMonthCount = 0, studioMonthCount = 0, lastMonth = -1;
+  const points = [{date:new Date(current), value:capital}];
+
+  const aptTenantDates = [];
+  let qd = new Date(2026,5,18);
+  while(qd <= endDate) {
+    const yr = Math.max(1, Math.ceil((qd-CONFIG.START_DATE)/(365.25*24*3600*1000)));
+    aptTenantDates.push({date:new Date(qd), amount:rentForYear(CONFIG.APT_BASE_RENT, yr)});
+    qd = new Date(qd); qd.setMonth(qd.getMonth()+3);
+  }
+  const studioTenantDates = [];
+  let sd = new Date(2026,11,1);
+  while(sd <= endDate) {
+    const yr = Math.max(1, Math.ceil((sd-CONFIG.STUDIO_START)/(365.25*24*3600*1000)));
+    studioTenantDates.push({date:new Date(sd), amount:rentForYear(CONFIG.STUDIO_BASE_RENT, yr)});
+    sd = new Date(sd); sd.setMonth(sd.getMonth()+3);
+  }
+
+  let aptIdx=0, studioIdx=0;
+  while(current <= endDate) {
+    capital *= (1+dailyRate);
+    const cm = current.getFullYear()*12+current.getMonth();
+    if(cm !== lastMonth) {
+      lastMonth = cm; aptMonthCount++;
+      capital = Math.max(0, capital - aptMortgage(aptMonthCount));
+      if(current >= CONFIG.STUDIO_START) {
+        studioMonthCount++;
+        capital = Math.max(0, capital - studioMortgage(studioMonthCount));
+      }
+    }
+    if(aptIdx < aptTenantDates.length && current >= aptTenantDates[aptIdx].date) { capital += aptTenantDates[aptIdx].amount; aptIdx++; }
+    if(studioIdx < studioTenantDates.length && current >= studioTenantDates[studioIdx].date) { capital += studioTenantDates[studioIdx].amount; studioIdx++; }
+    const next = new Date(current); next.setDate(next.getDate()+1);
+    if(next.getDate()===1) points.push({date:new Date(next), value:Math.round(capital)});
+    current = next;
+  }
+  return points;
+}
+
+function getValAtDate(pts, d) {
+  let closest=pts[0], minD=Math.abs(pts[0].date-d);
+  for(const p of pts) { const diff=Math.abs(p.date-d); if(diff<minD){minD=diff;closest=p;} }
+  return closest.value;
+}
+
+// Pre-compute 15-year projections
+const proj15 = {
+  opt: simulate(CONFIG.RATES.opt, 15),
+  mod: simulate(CONFIG.RATES.mod, 15),
+  con: simulate(CONFIG.RATES.con, 15)
+};
+
+// ═══════════════════════════════════════════════════════
+// CHART INSTANCES
+// ═══════════════════════════════════════════════════════
+const charts = {};
+function destroyChart(id) { if(charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+// ═══════════════════════════════════════════════════════
+// DASHBOARD INIT
+// ═══════════════════════════════════════════════════════
+function initDashboard() {
+  const now = new Date();
+  document.getElementById('headerDate').textContent = now.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+
+  const days = Math.floor((now - CONFIG.START_DATE)/(24*3600*1000));
+  document.getElementById('dbDays').textContent = days.toLocaleString();
+
+  const aptMonths = monthsBetween(CONFIG.START_DATE, now);
+  const studioMonths = Math.max(0, monthsBetween(CONFIG.STUDIO_START, now));
+  const aptRemain = Math.round(Math.max(0, 875000 - (CONFIG.APT_MORT_BASE * 0.6 * aptMonths)));
+  const studioRemain = Math.round(Math.max(0, 720000 - (CONFIG.STUDIO_MORT_BASE * 0.55 * studioMonths)));
+  const totalMort = aptRemain + studioRemain;
+
+  document.getElementById('dbMortRemain1').textContent = fmtAED(aptRemain);
+  document.getElementById('dbMortRemain2').textContent = studioMonths > 0 ? fmtAED(studioRemain) : 'Not started';
+  document.getElementById('dbMortgages').textContent = fmtAED(totalMort);
+
+  const aptMortNow = aptMortgage(aptMonths);
+  const studioMortNow = studioMonths > 0 ? studioMortgage(studioMonths) : 0;
+  document.getElementById('dbMortMonthly').textContent = fmtNum(aptMortNow + studioMortNow);
+
+  const yearNum = Math.max(1, Math.ceil(aptMonths/12));
+  const aptRentNow = rentForYear(CONFIG.APT_BASE_RENT, yearNum);
+  const studioRentNow = studioMonths > 0 ? rentForYear(CONFIG.STUDIO_BASE_RENT, Math.max(1, Math.ceil(studioMonths/12))) : 0;
+  const rentMonthly = Math.round((aptRentNow + studioRentNow) / 3);
+  document.getElementById('dbRentMonthly').textContent = fmtNum(rentMonthly);
+
+  const surplus = rentMonthly - (aptMortNow + studioMortNow);
+  document.getElementById('dbSurplus').textContent = (surplus >= 0 ? '+' : '') + fmtNum(surplus);
+  document.getElementById('dbSurplus').style.color = surplus >= 0 ? 'var(--teal)' : 'var(--red)';
+
+  const projMod = getValAtDate(proj15.mod, now);
+  document.getElementById('dbProjMod').textContent = fmtAED(projMod);
+
+  document.getElementById('dbNextApt').textContent = fmtNum(aptRentNow);
+  document.getElementById('dbNextStudio').textContent = studioMonths > 0 ? fmtNum(studioRentNow) : 'Sep 2026';
+
+  if(state.actualBalances.length > 0) {
+    const latest = state.actualBalances[state.actualBalances.length-1];
+    document.getElementById('dbActual').textContent = fmtNum(latest.balance);
+    document.getElementById('dbActualDate').textContent = 'As of '+latest.month;
+    document.getElementById('dbPortfolio').textContent = fmtAED(latest.balance);
+    document.getElementById('netWorthVal').textContent = fmtAED(latest.balance + 2300000);
+  } else {
+    document.getElementById('dbPortfolio').textContent = fmtAED(projMod);
+    document.getElementById('netWorthVal').textContent = fmtAED(projMod + 2300000);
+  }
+
+  buildDashChart();
+}
+
+function buildDashChart() {
+  destroyChart('dash');
+  const now = new Date();
+  const step = Math.max(1, Math.floor(proj15.opt.length/60));
+  const labels = proj15.opt.filter((_,i)=>i%step===0).map(p=>p.date.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}));
+  const sample = pts => pts.filter((_,i)=>i%step===0).map(p=>Math.round(p.value));
+
+  const actualData = proj15.opt.filter((_,i)=>i%step===0).map(p => {
+    const match = state.actualBalances.find(b => {
+      const bDate = new Date(b.month+'-01');
+      return bDate.getFullYear()===p.date.getFullYear() && bDate.getMonth()===p.date.getMonth();
+    });
+    return match ? match.balance : null;
+  });
+
+  charts['dash'] = new Chart(document.getElementById('dashChart'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'Optimistic',data:sample(proj15.opt),borderColor:'#1D9E75',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false},
+        {label:'Moderate',data:sample(proj15.mod),borderColor:'#378ADD',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[5,3]},
+        {label:'Conservative',data:sample(proj15.con),borderColor:'#BA7517',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[2,4]},
+        {label:'Actual',data:actualData,borderColor:'#b8922e',backgroundColor:'#b8922e',borderWidth:2,pointRadius:4,pointHoverRadius:6,tension:0.3,fill:false,spanGaps:false},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmtShort(ctx.raw)+' AED'}}},
+      scales:{x:{ticks:{autoSkip:true,maxRotation:45,font:{size:10},color:'#888'},grid:{display:false}},
+              y:{ticks:{font:{size:10},color:'#888',callback:v=>fmtShort(v)},grid:{color:'rgba(0,0,0,0.05)'}}}}
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// PROJECTIONS
+// ═══════════════════════════════════════════════════════
+const scenarioOn = {opt:true, mod:true, con:true};
+function toggleScenario(s) {
+  scenarioOn[s] = !scenarioOn[s];
+  document.getElementById('tog-'+s).classList.toggle('on', scenarioOn[s]);
+  buildProjectionChart();
+}
+
+function buildProjectionChart() {
+  destroyChart('proj');
+  const years = parseInt(document.getElementById('projYears').value);
+  const endDate = new Date(CONFIG.START_DATE.getFullYear()+years, CONFIG.START_DATE.getMonth(), CONFIG.START_DATE.getDate());
+  const pts = {
+    opt: proj15.opt.filter(p=>p.date<=endDate),
+    mod: proj15.mod.filter(p=>p.date<=endDate),
+    con: proj15.con.filter(p=>p.date<=endDate)
+  };
+  const step = Math.max(1,Math.floor(pts.mod.length/60));
+  const labels = pts.mod.filter((_,i)=>i%step===0).map(p=>p.date.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}));
+  const sample = arr => arr.filter((_,i)=>i%step===0).map(p=>Math.round(p.value));
+  const datasets = [];
+  if(scenarioOn.opt) datasets.push({label:'Optimistic',data:sample(pts.opt),borderColor:'#1D9E75',borderWidth:2,pointRadius:0,tension:0.3,fill:false});
+  if(scenarioOn.mod) datasets.push({label:'Moderate',data:sample(pts.mod),borderColor:'#378ADD',borderWidth:2,pointRadius:0,tension:0.3,fill:false,borderDash:[6,3]});
+  if(scenarioOn.con) datasets.push({label:'Conservative',data:sample(pts.con),borderColor:'#BA7517',borderWidth:2,pointRadius:0,tension:0.3,fill:false,borderDash:[2,4]});
+  charts['proj'] = new Chart(document.getElementById('projChart'),{
+    type:'line',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmtShort(ctx.raw)+' AED'}}},
+      scales:{x:{ticks:{autoSkip:true,maxRotation:45,font:{size:10},color:'#888'},grid:{display:false}},
+              y:{ticks:{font:{size:10},color:'#888',callback:v=>fmtShort(v)+' AED'},grid:{color:'rgba(0,0,0,0.05)'}}}}
+  });
+  buildProjTable(years);
+}
+
+function buildProjTable(years) {
+  const tbody = document.getElementById('projTableBody');
+  tbody.innerHTML = '';
+  const milestones = [];
+  for(let y=0; y<=Math.min(years,15); y++) {
+    milestones.push({yr:y, date:new Date(CONFIG.START_DATE.getFullYear()+y, CONFIG.START_DATE.getMonth(), CONFIG.START_DATE.getDate())});
+  }
+  milestones.forEach(m => {
+    const aptRent = rentForYear(CONFIG.APT_BASE_RENT, Math.max(1,m.yr));
+    const studioRent = m.yr >= 1 ? rentForYear(CONFIG.STUDIO_BASE_RENT, Math.max(1,m.yr)) : 0;
+    const aptMort = aptMortgage(m.yr*12);
+    const studioMort = m.yr >= 1 ? studioMortgage(Math.max(1,m.yr*12-5)) : 0;
+    const opt = getValAtDate(proj15.opt, m.date);
+    const mod = getValAtDate(proj15.mod, m.date);
+    const con = getValAtDate(proj15.con, m.date);
+    const row = document.createElement('tr');
+    if([0,5,10,15].includes(m.yr)) row.className = 'bold-row';
+    row.innerHTML = `
+      <td>Year ${m.yr} — ${m.date.toLocaleDateString('en-GB',{month:'short',year:'numeric'})}</td>
+      <td>${aptRent.toLocaleString()} AED</td>
+      <td>${studioRent > 0 ? studioRent.toLocaleString()+' AED' : '—'}</td>
+      <td style="color:var(--red)">${(aptMort+studioMort).toLocaleString()} AED</td>
+      <td style="color:var(--teal)">${fmtAED(opt)}</td>
+      <td style="color:var(--blue)">${fmtAED(mod)}</td>
+      <td style="color:var(--amber)">${fmtAED(con)}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// ACTUAL VS PROJECTED
+// ═══════════════════════════════════════════════════════
+function saveActualBalance() {
+  const month = document.getElementById('avpMonth').value;
+  const balance = parseFloat(document.getElementById('avpBalance').value);
+  const notes = document.getElementById('avpNotes').value;
+  if(!month || !balance) { showStatus('avpStatus','Please fill in month and balance.','error'); return; }
+  const existing = state.actualBalances.findIndex(b=>b.month===month);
+  if(existing>=0) state.actualBalances[existing] = {month,balance,notes};
+  else state.actualBalances.push({month,balance,notes});
+  state.actualBalances.sort((a,b)=>a.month.localeCompare(b.month));
+  saveState();
+  showStatus('avpStatus','Balance saved successfully.','success');
+  document.getElementById('avpMonth').value='';
+  document.getElementById('avpBalance').value='';
+  document.getElementById('avpNotes').value='';
+  refreshAVP();
+  syncToSheet('actual_balance', {month,balance,notes});
+}
+
+function refreshAVP() {
+  if(state.actualBalances.length === 0) return;
+  const latest = state.actualBalances[state.actualBalances.length-1];
+  const latestDate = new Date(latest.month+'-01');
+  document.getElementById('avpLatestActual').textContent = fmtNum(latest.balance);
+  document.getElementById('avpLatestDate').textContent = latestDate.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+
+  const projMod = getValAtDate(proj15.mod, latestDate);
+  const projOpt = getValAtDate(proj15.opt, latestDate);
+  const projCon = getValAtDate(proj15.con, latestDate);
+
+  const setComp = (elVal, elPct, proj) => {
+    const diff = latest.balance - proj;
+    const pct = ((diff/proj)*100).toFixed(1);
+    document.getElementById(elVal).textContent = (diff>=0?'+':'')+fmtNum(diff);
+    document.getElementById(elVal).style.color = diff>=0?'var(--teal)':'var(--red)';
+    document.getElementById(elPct).textContent = (diff>=0?'+':'')+pct+'% vs projection';
+  };
+  setComp('avpVsMod','avpVsModPct',projMod);
+  setComp('avpVsOpt','avpVsOptPct',projOpt);
+  setComp('avpVsCon','avpVsConPct',projCon);
+
+  buildAVPChart();
+  buildAVPTable();
+}
+
+function buildAVPChart() {
+  destroyChart('avp');
+  const step = Math.max(1,Math.floor(proj15.mod.length/60));
+  const endDate = new Date();
+  endDate.setMonth(endDate.getMonth()+6);
+  const pts = proj15.mod.filter(p=>p.date<=endDate);
+  const labels = pts.filter((_,i)=>i%step===0).map(p=>p.date.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}));
+  const sample = arr => arr.filter(p=>p.date<=endDate).filter((_,i)=>i%step===0).map(p=>Math.round(p.value));
+
+  const actualData = pts.filter((_,i)=>i%step===0).map(p => {
+    const match = state.actualBalances.find(b=>{
+      const bd=new Date(b.month+'-01');
+      return bd.getFullYear()===p.date.getFullYear()&&bd.getMonth()===p.date.getMonth();
+    });
+    return match?match.balance:null;
+  });
+
+  charts['avp'] = new Chart(document.getElementById('avpChart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Optimistic',data:sample(proj15.opt.filter(p=>p.date<=endDate)),borderColor:'#1D9E75',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false},
+      {label:'Moderate',data:sample(pts),borderColor:'#378ADD',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[5,3]},
+      {label:'Conservative',data:sample(proj15.con.filter(p=>p.date<=endDate)),borderColor:'#BA7517',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[2,4]},
+      {label:'Actual',data:actualData,borderColor:'#b8922e',backgroundColor:'#b8922e',borderWidth:2.5,pointRadius:5,pointHoverRadius:7,tension:0.3,fill:false,spanGaps:false},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmtShort(ctx.raw)+' AED'}}},
+      scales:{x:{ticks:{autoSkip:true,maxRotation:45,font:{size:10},color:'#888'},grid:{display:false}},
+              y:{ticks:{font:{size:10},color:'#888',callback:v=>fmtShort(v)},grid:{color:'rgba(0,0,0,0.05)'}}}}
+  });
+}
+
+function buildAVPTable() {
+  const tbody = document.getElementById('avpTableBody');
+  tbody.innerHTML = '';
+  if(state.actualBalances.length===0){tbody.innerHTML='<tr><td colspan="5" class="loading">No balances logged yet.</td></tr>';return;}
+  [...state.actualBalances].reverse().forEach(b=>{
+    const bd = new Date(b.month+'-01');
+    const proj = getValAtDate(proj15.mod, bd);
+    const diff = b.balance - proj;
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${bd.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</td>
+      <td><strong>${fmtNum(b.balance)}</strong></td>
+      <td style="color:var(--blue)">${fmtNum(proj)}</td>
+      <td><span class="badge ${diff>=0?'badge-green':'badge-red'}">${diff>=0?'+':''}${fmtNum(diff)}</span></td>
+      <td style="color:var(--ink-faint)">${b.notes||'—'}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// MORTGAGE TRACKER
+// ═══════════════════════════════════════════════════════
+function initMortgageTracker() {
+  const now = new Date();
+  const aptMonths = monthsBetween(CONFIG.START_DATE, now);
+  const studioMonths = Math.max(0, monthsBetween(CONFIG.STUDIO_START, now));
+
+  const aptPmt = aptMortgage(aptMonths);
+  const studioPmt = studioMortgage(studioMonths);
+  document.getElementById('mt1Payment').textContent = aptPmt.toLocaleString()+' AED';
+  document.getElementById('mt2Payment').textContent = studioMonths>0 ? studioPmt.toLocaleString()+' AED' : 'Starts Sep 2026';
+
+  const aptPaid = Math.round(CONFIG.APT_MORT_BASE * 0.6 * aptMonths);
+  const aptRemain = Math.max(0, 875000 - aptPaid);
+  const aptPct = Math.round((aptPaid/875000)*100);
+  document.getElementById('mt1Remaining').textContent = fmtAED(aptRemain);
+  document.getElementById('mt1PaidPct').innerHTML = `<div class="progress-wrap"><div class="progress-bar" style="width:${aptPct}%;background:var(--teal)"></div></div>${aptPct}% principal paid`;
+
+  if(studioMonths > 0) {
+    const studioPaid = Math.round(CONFIG.STUDIO_MORT_BASE * 0.55 * studioMonths);
+    const studioRemain = Math.max(0, 720000 - studioPaid);
+    const studioPct = Math.round((studioPaid/720000)*100);
+    document.getElementById('mt2Remaining').textContent = fmtAED(studioRemain);
+    document.getElementById('mt2PaidPct').innerHTML = `<div class="progress-wrap"><div class="progress-bar" style="width:${studioPct}%;background:var(--teal)"></div></div>${studioPct}% principal paid`;
+  } else {
+    document.getElementById('mt2Remaining').textContent = '720,000 AED';
+    document.getElementById('mt2PaidPct').textContent = 'Starts Sep 2026';
+  }
+
+  buildMortChart();
+  buildMortSchedule();
+}
+
+function buildMortChart() {
+  destroyChart('mort');
+  const labels=[], apt=[], studio=[];
+  for(let m=0;m<=180;m+=3) {
+    const d = new Date(CONFIG.START_DATE); d.setMonth(d.getMonth()+m);
+    labels.push(d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}));
+    apt.push(Math.max(0, Math.round(875000 - (CONFIG.APT_MORT_BASE*0.6*m))));
+    studio.push(m>=5 ? Math.max(0, Math.round(720000 - (CONFIG.STUDIO_MORT_BASE*0.55*Math.max(0,m-5)))) : 720000);
+  }
+  charts['mort'] = new Chart(document.getElementById('mortChart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Existing Apt',data:apt,borderColor:'#E24B4A',borderWidth:2,pointRadius:0,tension:0.3,fill:false},
+      {label:'Studio',data:studio,borderColor:'#BA7517',borderWidth:2,pointRadius:0,tension:0.3,fill:false,borderDash:[5,3]},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmtShort(ctx.raw)+' AED'}}},
+      scales:{x:{ticks:{autoSkip:true,maxRotation:45,font:{size:10},color:'#888'},grid:{display:false}},
+              y:{ticks:{font:{size:10},color:'#888',callback:v=>fmtShort(v)+' AED'},grid:{color:'rgba(0,0,0,0.05)'}}}}
+  });
+}
+
+function buildMortSchedule() {
+  const tbody = document.getElementById('mortScheduleBody');
+  tbody.innerHTML = '';
+  const periods = [
+    {label:'Period 1',start:'Apr 2026',apt:6450,studio:0,change:'Baseline'},
+    {label:'Period 2',start:'Sep 2026',apt:6450,studio:5510,change:'Studio starts'},
+    {label:'Period 3',start:'Apr 2029',apt:6708,studio:5730,change:'+4% both'},
+    {label:'Period 4',start:'Apr 2032',apt:6976,studio:5959,change:'+4% both'},
+    {label:'Period 5',start:'Apr 2035',apt:7255,studio:6197,change:'+4% both'},
+    {label:'Period 6',start:'Apr 2038',apt:0,studio:6445,change:'Existing clears'},
+    {label:'Period 7',start:'Sep 2041',apt:0,studio:0,change:'Studio clears'},
+  ];
+  periods.forEach(p=>{
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${p.label}</td>
+      <td>${p.start}</td>
+      <td style="color:var(--red)">${p.apt>0?p.apt.toLocaleString()+' AED':'CLEARED'}</td>
+      <td style="color:var(--amber)">${p.studio>0?p.studio.toLocaleString()+' AED':p.studio===0&&p.label==='Period 1'?'Not started':'CLEARED'}</td>
+      <td><strong>${p.apt+p.studio>0?(p.apt+p.studio).toLocaleString()+' AED':'CLEARED'}</strong></td>
+      <td><span class="badge ${p.change.includes('clears')||p.change==='CLEARED'?'badge-green':p.change==='Baseline'?'badge-gold':'badge-blue'}">${p.change}</span></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// PROPERTY CHARTS
+// ═══════════════════════════════════════════════════════
+function buildAptChart() {
+  destroyChart('apt');
+  const labels=[], rent=[], mort=[];
+  for(let y=1;y<=15;y++) {
+    labels.push('Yr '+y);
+    rent.push(Math.round(rentForYear(CONFIG.APT_BASE_RENT,y)/3));
+    mort.push(aptMortgage(y*12));
+  }
+  charts['apt'] = new Chart(document.getElementById('aptChart'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Monthly Rent Equiv.',data:rent,backgroundColor:'rgba(184,146,46,0.7)',borderRadius:4},
+      {label:'Monthly Mortgage',data:mort,backgroundColor:'rgba(226,75,74,0.7)',borderRadius:4},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+ctx.raw.toLocaleString()+' AED'}}},
+      scales:{x:{ticks:{font:{size:10},color:'#888'},grid:{display:false}},
+              y:{ticks:{font:{size:10},color:'#888',callback:v=>v.toLocaleString()},grid:{color:'rgba(0,0,0,0.05)'}}}}
+  });
+}
+
+function buildStudioChart() {
+  destroyChart('studio');
+  const labels=[], rent=[], mort=[];
+  for(let y=1;y<=15;y++) {
+    labels.push('Yr '+y);
+    rent.push(Math.round(rentForYear(CONFIG.STUDIO_BASE_RENT,y)/3));
+    mort.push(studioMortgage(y*12));
+  }
+  charts['studio'] = new Chart(document.getElementById('studioChart'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Monthly Rent Equiv.',data:rent,backgroundColor:'rgba(184,146,46,0.7)',borderRadius:4},
+      {label:'Monthly Mortgage',data:mort,backgroundColor:'rgba(226,75,74,0.7)',borderRadius:4},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+ctx.raw.toLocaleString()+' AED'}}},
+      scales:{x:{ticks:{font:{size:10},color:'#888'},grid:{display:false}},
+              y:{ticks:{font:{size:10},color:'#888',callback:v=>v.toLocaleString()},grid:{color:'rgba(0,0,0,0.05)'}}}}
+  });
+}
+
+function buildCombChart() {
+  destroyChart('comb');
+  const now = new Date();
+  const aptYr = Math.max(1,Math.ceil(monthsBetween(CONFIG.START_DATE,now)/12));
+  const stYr = Math.max(1,Math.ceil(monthsBetween(CONFIG.STUDIO_START,now)/12));
+  document.getElementById('comb-rent').textContent = fmtNum((CONFIG.APT_BASE_RENT+CONFIG.STUDIO_BASE_RENT)*4);
+  document.getElementById('comb-surplus').textContent = fmtNum(Math.round(((CONFIG.APT_BASE_RENT+CONFIG.STUDIO_BASE_RENT)*4/12)-(CONFIG.APT_MORT_BASE+CONFIG.STUDIO_MORT_BASE)));
+
+  const labels=[], rent=[], mort=[];
+  for(let y=1;y<=10;y++) {
+    labels.push('Yr '+y);
+    const aptR = Math.round(rentForYear(CONFIG.APT_BASE_RENT,y)/3);
+    const stR = y>=1 ? Math.round(rentForYear(CONFIG.STUDIO_BASE_RENT,y)/3) : 0;
+    const aptM = aptMortgage(y*12);
+    const stM = studioMortgage(Math.max(1,y*12-5));
+    rent.push(aptR+stR);
+    mort.push(aptM+stM);
+  }
+  charts['comb'] = new Chart(document.getElementById('combChart'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Combined Monthly Rent',data:rent,backgroundColor:'rgba(184,146,46,0.7)',borderRadius:4},
+      {label:'Combined Mortgage',data:mort,backgroundColor:'rgba(226,75,74,0.7)',borderRadius:4},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+ctx.raw.toLocaleString()+' AED'}}},
+      scales:{x:{ticks:{font:{size:10},color:'#888'},grid:{display:false}},
+              y:{ticks:{font:{size:10},color:'#888',callback:v=>v.toLocaleString()},grid:{color:'rgba(0,0,0,0.05)'}}}}
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// TENANT INCOME LOG
+// ═══════════════════════════════════════════════════════
+function saveTenantIncome() {
+  const property = document.getElementById('ti-property').value;
+  const date = document.getElementById('ti-date').value;
+  const amount = parseFloat(document.getElementById('ti-amount').value);
+  const ref = document.getElementById('ti-ref').value;
+  const notes = document.getElementById('ti-notes').value;
+  if(!date||!amount){showStatus('tiStatus','Please fill in date and amount.','error');return;}
+  state.tenantIncome.push({property,date,amount,ref,notes,id:Date.now()});
+  state.tenantIncome.sort((a,b)=>a.date.localeCompare(b.date));
+  saveState();
+  showStatus('tiStatus','Tenant income saved.','success');
+  ['ti-date','ti-amount','ti-ref','ti-notes'].forEach(id=>document.getElementById(id).value='');
+  refreshTenantLog();
+  syncToSheet('tenant_income',{property,date,amount,ref,notes});
+}
+
+function refreshTenantLog() {
+  const aptEntries = state.tenantIncome.filter(t=>t.property==='Existing Apartment');
+  const studioEntries = state.tenantIncome.filter(t=>t.property==='Studio');
+  const aptTotal = aptEntries.reduce((s,t)=>s+t.amount,0);
+  const studioTotal = studioEntries.reduce((s,t)=>s+t.amount,0);
+  document.getElementById('ti-totalApt').textContent = fmtNum(aptTotal);
+  document.getElementById('ti-countApt').textContent = aptEntries.length+' cheques logged';
+  document.getElementById('ti-totalStudio').textContent = fmtNum(studioTotal);
+  document.getElementById('ti-countStudio').textContent = studioEntries.length+' cheques logged';
+  document.getElementById('ti-totalAll').textContent = fmtNum(aptTotal+studioTotal);
+
+  const tbody = document.getElementById('tiTableBody');
+  tbody.innerHTML = '';
+  if(state.tenantIncome.length===0){tbody.innerHTML='<tr><td colspan="5" class="loading">No entries yet.</td></tr>';return;}
+  [...state.tenantIncome].reverse().forEach(t=>{
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${new Date(t.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</td>
+      <td><span class="badge badge-gold">${t.property}</span></td>
+      <td><strong style="color:var(--teal)">${fmtNum(t.amount)}</strong></td>
+      <td style="color:var(--ink-faint)">${t.ref||'—'}</td>
+      <td style="color:var(--ink-faint)">${t.notes||'—'}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// MORTGAGE PAYMENT LOG
+// ═══════════════════════════════════════════════════════
+function saveMortgagePayment() {
+  const property = document.getElementById('ml-property').value;
+  const date = document.getElementById('ml-date').value;
+  const amount = parseFloat(document.getElementById('ml-amount').value);
+  const ref = document.getElementById('ml-ref').value;
+  const notes = document.getElementById('ml-notes').value;
+  if(!date||!amount){showStatus('mlStatus','Please fill in date and amount.','error');return;}
+  state.mortgagePayments.push({property,date,amount,ref,notes,id:Date.now()});
+  state.mortgagePayments.sort((a,b)=>a.date.localeCompare(b.date));
+  saveState();
+  showStatus('mlStatus','Mortgage payment saved.','success');
+  ['ml-date','ml-amount','ml-ref','ml-notes'].forEach(id=>document.getElementById(id).value='');
+  refreshMortLog();
+  syncToSheet('mortgage_payment',{property,date,amount,ref,notes});
+}
+
+function refreshMortLog() {
+  const aptEntries = state.mortgagePayments.filter(t=>t.property==='Existing Apartment');
+  const studioEntries = state.mortgagePayments.filter(t=>t.property==='Studio');
+  const aptTotal = aptEntries.reduce((s,t)=>s+t.amount,0);
+  const studioTotal = studioEntries.reduce((s,t)=>s+t.amount,0);
+  document.getElementById('ml-totalApt').textContent = fmtNum(aptTotal);
+  document.getElementById('ml-countApt').textContent = aptEntries.length+' payments logged';
+  document.getElementById('ml-totalStudio').textContent = fmtNum(studioTotal);
+  document.getElementById('ml-countStudio').textContent = studioEntries.length+' payments logged';
+  document.getElementById('ml-totalAll').textContent = fmtNum(aptTotal+studioTotal);
+
+  const tbody = document.getElementById('mlTableBody');
+  tbody.innerHTML = '';
+  if(state.mortgagePayments.length===0){tbody.innerHTML='<tr><td colspan="5" class="loading">No payments logged yet.</td></tr>';return;}
+  [...state.mortgagePayments].reverse().forEach(t=>{
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${new Date(t.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</td>
+      <td><span class="badge badge-blue">${t.property}</span></td>
+      <td><strong style="color:var(--red)">${fmtNum(t.amount)}</strong></td>
+      <td style="color:var(--ink-faint)">${t.ref||'—'}</td>
+      <td style="color:var(--ink-faint)">${t.notes||'—'}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ═══════════════════════════════════════════════════════
+async function syncToSheet(action, data) {
+  if(CONFIG.SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
+  try {
+    await fetch(CONFIG.SCRIPT_URL, {
+      method:'POST',
+      body: JSON.stringify({action, data}),
+      headers:{'Content-Type':'text/plain'}
+    });
+  } catch(e) { console.warn('Sheet sync failed:', e); }
+}
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function showStatus(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'status-msg '+type;
+  setTimeout(()=>{ el.className='status-msg'; el.textContent=''; }, 3500);
+}
+
+function setDefaultDates() {
+  const today = new Date().toISOString().split('T')[0];
+  const monthStr = new Date().toISOString().slice(0,7);
+  document.getElementById('avpMonth').value = monthStr;
+  document.getElementById('ti-date').value = today;
+  document.getElementById('ml-date').value = today;
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+function initPortal() {
+  setDefaultDates();
+  initDashboard();
+  buildProjectionChart();
+  refreshAVP();
+  initMortgageTracker();
+  refreshTenantLog();
+  refreshMortLog();
+  buildAptChart();
+}
+</script>
+</body>
+</html>
