@@ -207,7 +207,7 @@
       </div>
       <div class="networth-item">
         <div style="color:var(--ink-faint);font-size:0.75rem;">Mortgage Outstanding</div>
-        <div style="color:var(--red);font-size:1.1rem;font-weight:500;" id="dbMortOut">853,532 AED</div>
+        <div style="color:var(--red);font-size:1.1rem;font-weight:500;" id="dbMortOut">850,280 AED</div>
       </div>
     </div>
   </div>
@@ -266,13 +266,13 @@
     </div>
     <div class="metric-card">
       <div class="metric-label">Mortgage Payments Made</div>
-      <div class="metric-value" id="dbPaysMade">2</div>
+      <div class="metric-value" id="dbPaysMade">3</div>
       <div class="metric-sub">28 Feb + 1 Apr 2026</div>
     </div>
     <div class="metric-card red-accent">
       <div class="metric-label">Mortgage Outstanding</div>
-      <div class="metric-value red" id="dbMortRemain">853,532 AED</div>
-      <div class="metric-sub" id="dbMortPct">0.75% paid to date</div>
+      <div class="metric-value red" id="dbMortRemain">850,280 AED</div>
+      <div class="metric-sub" id="dbMortPct">1.13% paid to date</div>
     </div>
     <div class="metric-card red-accent">
       <div class="metric-label">Upfront Settlement</div>
@@ -399,8 +399,8 @@
     </div>
     <div class="metric-card red-accent">
       <div class="metric-label">Outstanding Balance</div>
-      <div class="metric-value red" id="mtRemaining">853,532 AED</div>
-      <div class="metric-sub" id="mtPaidPct">0.75% paid to date</div>
+      <div class="metric-value red" id="mtRemaining">850,280 AED</div>
+      <div class="metric-sub" id="mtPaidPct">1.13% paid to date</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Original Loan</div>
@@ -409,8 +409,8 @@
     </div>
     <div class="metric-card">
       <div class="metric-label">Payments Made</div>
-      <div class="metric-value" id="mtPaysMade">2</div>
-      <div class="metric-sub">28 Feb 2026 + 1 Apr 2026</div>
+      <div class="metric-value" id="mtPaysMade">3</div>
+      <div class="metric-sub">28 Feb + 1 Mar + 1 Apr 2026</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Next Rate Increase</div>
@@ -466,8 +466,8 @@
     </div>
     <div class="metric-card red-accent">
       <div class="metric-label">Current Outstanding</div>
-      <div class="metric-value red" id="propOutstanding">853,532 AED</div>
-      <div class="metric-sub">After 2 EMI payments</div>
+      <div class="metric-value red" id="propOutstanding">850,280 AED</div>
+      <div class="metric-sub">After 3 EMI payments</div>
     </div>
     <div class="metric-card red-accent">
       <div class="metric-label">Monthly EMI</div>
@@ -588,18 +588,18 @@
   <div class="metric-grid">
     <div class="metric-card red-accent">
       <div class="metric-label">Total Paid to Date</div>
-      <div class="metric-value red" id="mlTotal">12,906 AED</div>
-      <div class="metric-sub" id="mlCount">2 payments logged</div>
+      <div class="metric-value red" id="mlTotal">19,359 AED</div>
+      <div class="metric-sub" id="mlCount">3 payments logged</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Principal Paid</div>
-      <div class="metric-value" id="mlPrincipal">~6,468 AED</div>
-      <div class="metric-sub">Balance of 6,438 was interest</div>
+      <div class="metric-value" id="mlPrincipal">~9,720 AED</div>
+      <div class="metric-sub">Balance of 9,639 was interest</div>
     </div>
     <div class="metric-card teal-accent">
       <div class="metric-label">Current Outstanding</div>
-      <div class="metric-value teal" id="mlOutstanding">853,532 AED</div>
-      <div class="metric-sub">After 2 payments</div>
+      <div class="metric-value teal" id="mlOutstanding">850,280 AED</div>
+      <div class="metric-sub">After 3 payments</div>
     </div>
   </div>
 
@@ -627,9 +627,9 @@ const CONFIG = {
   EMI_BASE: 6453,
   EMI_INCREASE: 0.04,
   MORT_MONTHS: 150,
-  MORT_OUTSTANDING: 853532,
+  MORT_OUTSTANDING: 850280,
   MORT_ORIGINAL: 860000,
-  MORT_PAYMENTS_MADE: 2,
+  MORT_PAYMENTS_MADE: 3,
   START_CAPITAL: 36700,
   RATES: {opt:0.1515, mod:0.08, con:0.05}
 };
@@ -1010,8 +1010,9 @@ function refreshTenantLog() {
 
 // MORTGAGE LOG
 function prepopulateKnownPayments() {
-  [{date:'2026-02-28',amount:6453,ref:'EMI-001',notes:'First mortgage payment',id:1},
-   {date:'2026-04-01',amount:6453,ref:'EMI-002',notes:'Second mortgage payment',id:2}].forEach(k=>{
+  [{date:'2026-02-28',amount:6453,ref:'EMI-001',notes:'First mortgage payment — Feb 2026',id:1},
+   {date:'2026-03-01',amount:6453,ref:'EMI-002',notes:'Second mortgage payment — Mar 2026',id:2},
+   {date:'2026-04-01',amount:6453,ref:'EMI-003',notes:'Third mortgage payment — Apr 2026',id:3}].forEach(k=>{
     if(!state.mortgagePayments.find(p=>p.id===k.id)) state.mortgagePayments.push(k);
   });
   state.mortgagePayments.sort((a,b)=>a.date.localeCompare(b.date));
