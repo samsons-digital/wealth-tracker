@@ -267,7 +267,7 @@ input:focus, select:focus { outline: none; border-color: var(--gold); background
 
   <div class="grid">
     <div class="card gold">
-      <div class="clabel">ATFX Balance (Actual)</div>
+      <div class="clabel">ATFX Balance (USD / AED)</div>
       <div class="cval gold" id="dbActual">No data</div>
       <div class="csub" id="dbActualDate">Log your first balance</div>
     </div>
@@ -839,16 +839,17 @@ function initDash() {
   document.getElementById('dbSettlement').style.color = stRem===0?'var(--teal)':'var(--red)';
 
   var projMod = valAt(P.mod,now);
-  document.getElementById('dbProjMod').textContent = fa(projMod);
+  document.getElementById('dbProjMod').textContent = fusd(toUSD(projMod))+' / '+fa(projMod);
 
   if(S.balances.length) {
     var lat = S.balances[S.balances.length-1];
-    document.getElementById('dbActual').textContent     = fusd(lat.balance)+' (~'+fn(Math.round(lat.balance*AED_USD))+')';
+    document.getElementById('dbActual').textContent     = fusd(lat.balance)+' / '+fa(Math.round(lat.balance*AED_USD));
     document.getElementById('dbActualDate').textContent = new Date(lat.month+'-01').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-    document.getElementById('nwPortfolio').textContent  = fa(lat.balance);
-    document.getElementById('nwVal').textContent        = fa(lat.balance+1075000-mortNow);
+    var latAED = Math.round(lat.balance*AED_USD);
+    document.getElementById('nwPortfolio').textContent  = fusd(lat.balance)+' / '+fa(latAED);
+    document.getElementById('nwVal').textContent        = fa(latAED+1075000-mortNow);
   } else {
-    document.getElementById('nwPortfolio').textContent = fa(projMod);
+    document.getElementById('nwPortfolio').textContent = fusd(toUSD(projMod))+' / '+fa(projMod);
     document.getElementById('nwVal').textContent       = fa(projMod+1075000-mortNow);
   }
   buildDashChart();
