@@ -4,1234 +4,1229 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wealth Tracker — Martin & Oksana</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
-  :root {
-    --gold: #b8922e; --gold-light: #d4a843;
-    --ink: #1c1c1c; --ink-soft: #6b6b6b; --ink-faint: #aaaaaa;
-    --white: #ffffff; --border-soft: rgba(0,0,0,0.06);
-    --teal: #1D9E75; --blue: #378ADD; --amber: #BA7517; --red: #E24B4A;
-    --surface: #eef1f4; --card: #ffffff; --radius: 12px; --radius-sm: 8px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'DM Sans', sans-serif; background: #f4f6f8; color: var(--ink); min-height: 100vh; }
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap');
 
+:root {
+  --gold: #b8922e;
+  --gold-light: #d4a843;
+  --ink: #1c1c1c;
+  --ink-soft: #6b6b6b;
+  --ink-faint: #aaaaaa;
+  --white: #ffffff;
+  --bg: #f4f6f8;
+  --surface: #eef1f4;
+  --card: #ffffff;
+  --border: rgba(0,0,0,0.07);
+  --teal: #1D9E75;
+  --blue: #378ADD;
+  --amber: #BA7517;
+  --red: #E24B4A;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
 
-  header { background: var(--ink); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(184,146,46,0.15); }
-  .header-brand { display: flex; align-items: center; gap: 12px; }
-  .header-logo { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--gold), var(--gold-light)); display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif; color: #1c1c1c; font-size: 1rem; }
-  .header-title { color: var(--white); font-size: 1rem; font-weight: 500; }
-  .header-sub { color: var(--gold); font-size: 0.75rem; }
-  .header-date { color: var(--ink-faint); font-size: 0.8rem; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); }
 
-  nav { background: var(--white); border-bottom: 1px solid var(--border-soft); display: flex; overflow-x: auto; padding: 0 1.5rem; }
-  nav::-webkit-scrollbar { display: none; }
-  .nav-tab { padding: 0 1.25rem; height: 48px; border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--ink-soft); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s; }
-  .nav-tab:hover { color: var(--ink); }
-  .nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 500; }
+header {
+  background: var(--ink);
+  height: 64px;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Serif Display', serif; color: var(--ink); font-size: 1rem;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-title { color: #fff; font-size: 1rem; font-weight: 500; }
+.brand-sub { color: var(--gold); font-size: 0.75rem; }
+#hDate { color: var(--ink-faint); font-size: 0.8rem; }
 
-  main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
-  .section { display: none; }
-  .section.active { display: block; }
+nav {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  overflow-x: auto;
+  padding: 0 1.5rem;
+}
+nav::-webkit-scrollbar { display: none; }
+.tab {
+  padding: 0 1.25rem;
+  height: 48px;
+  border: none;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+}
+.tab:hover { color: var(--ink); }
+.tab.on { color: var(--gold); border-bottom-color: var(--gold); font-weight: 500; }
 
-  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
-  .metric-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border-soft); padding: 1.25rem; }
-  .metric-card.gold-accent { border-left: 3px solid var(--gold); }
-  .metric-card.teal-accent { border-left: 3px solid var(--teal); }
-  .metric-card.red-accent { border-left: 3px solid var(--red); }
-  .metric-card.blue-accent { border-left: 3px solid var(--blue); }
-  .metric-label { font-size: 0.75rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-  .metric-value { font-size: 1.45rem; font-weight: 600; color: var(--ink); line-height: 1; }
-  .metric-value.gold { color: var(--gold); }
-  .metric-value.teal { color: var(--teal); }
-  .metric-value.red { color: var(--red); }
-  .metric-value.blue { color: var(--blue); }
-  .metric-sub { font-size: 0.75rem; color: var(--ink-faint); margin-top: 4px; }
+main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
 
-  .chart-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border-soft); padding: 1.5rem; margin-bottom: 1.5rem; }
-  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 8px; }
-  .chart-title { font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--ink); }
-  .chart-legend { display: flex; flex-wrap: wrap; gap: 12px; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--ink-soft); }
-  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
-  .chart-wrap { position: relative; height: 300px; }
+.page { display: none; }
+.page.on { display: block; }
 
-  .scenario-toggles { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
-  .toggle-btn { padding: 6px 14px; border-radius: 20px; border: 1.5px solid; font-size: 0.8rem; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.2s; font-weight: 500; }
-  .toggle-btn.opt { border-color: var(--teal); color: var(--teal); background: transparent; }
-  .toggle-btn.opt.on { background: var(--teal); color: white; }
-  .toggle-btn.mod { border-color: var(--blue); color: var(--blue); background: transparent; }
-  .toggle-btn.mod.on { background: var(--blue); color: white; }
-  .toggle-btn.con { border-color: var(--amber); color: var(--amber); background: transparent; }
-  .toggle-btn.con.on { background: var(--amber); color: white; }
+.h1 { font-family: 'DM Serif Display', serif; font-size: 1.5rem; margin-bottom: 0.2rem; }
+.sub { font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 1.5rem; }
 
-  .table-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border-soft); overflow: hidden; margin-bottom: 1.5rem; }
-  .table-card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-soft); }
-  .table-card-title { font-family: 'DM Serif Display', serif; font-size: 1rem; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-  thead tr { background: var(--surface); }
-  th { padding: 10px 12px; text-align: left; font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); white-space: nowrap; }
-  td { padding: 10px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover { background: var(--surface); }
-  .bold-row td { font-weight: 600; background: rgba(184,146,46,0.04); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
 
-  .form-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border-soft); padding: 1.5rem; margin-bottom: 1.5rem; }
-  .form-title { font-family: 'DM Serif Display', serif; font-size: 1rem; margin-bottom: 1.25rem; }
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1rem; }
-  .form-group { display: flex; flex-direction: column; gap: 5px; }
-  label { font-size: 0.78rem; color: var(--ink-soft); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
-  input, select { height: 40px; padding: 0 12px; border: 1px solid var(--border-soft); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--ink); background: var(--surface); transition: border-color 0.2s; }
-  input:focus, select:focus { outline: none; border-color: var(--gold); background: white; }
-  .btn { height: 40px; padding: 0 1.5rem; border-radius: var(--radius-sm); border: none; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-  .btn-primary { background: var(--gold); color: white; }
-  .btn-primary:hover { background: var(--gold-light); }
-  .status-msg { font-size: 0.82rem; padding: 8px 12px; border-radius: var(--radius-sm); margin-top: 8px; display: none; }
-  .status-msg.success { background: rgba(29,158,117,0.1); color: var(--teal); display: block; }
-  .status-msg.error { background: rgba(226,75,74,0.1); color: var(--red); display: block; }
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 1.25rem;
+}
+.card.gold { border-left: 3px solid var(--gold); }
+.card.teal { border-left: 3px solid var(--teal); }
+.card.red  { border-left: 3px solid var(--red); }
+.card.blue { border-left: 3px solid var(--blue); }
 
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 500; }
-  .badge-green { background: rgba(29,158,117,0.12); color: var(--teal); }
-  .badge-red { background: rgba(226,75,74,0.12); color: var(--red); }
-  .badge-gold { background: rgba(184,146,46,0.12); color: var(--gold); }
-  .badge-blue { background: rgba(55,138,221,0.12); color: var(--blue); }
+.clabel { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); margin-bottom: 6px; }
+.cval { font-size: 1.4rem; font-weight: 600; line-height: 1.1; }
+.cval.gold { color: var(--gold); }
+.cval.teal { color: var(--teal); }
+.cval.red  { color: var(--red); }
+.cval.blue { color: var(--blue); }
+.csub { font-size: 0.73rem; color: var(--ink-faint); margin-top: 4px; }
 
-  .section-heading { font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: var(--ink); margin-bottom: 0.25rem; }
-  .section-sub { font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 1.5rem; }
+.box {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.box-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.box-title { font-family: 'DM Serif Display', serif; font-size: 1.05rem; }
+.cw { position: relative; height: 300px; }
 
-  .networth-banner { background: var(--ink); border-radius: var(--radius); padding: 1.5rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
-  .networth-label { color: var(--gold); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
-  .networth-value { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--white); }
-  .networth-sub { font-size: 0.8rem; color: var(--ink-faint); margin-top: 2px; }
-  .networth-items { display: flex; gap: 2rem; flex-wrap: wrap; }
-  .networth-item { text-align: right; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; color: var(--ink-soft); }
+.legdot { width: 10px; height: 10px; border-radius: 2px; }
 
-  .alert-banner { border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-  .alert-banner.red { background: rgba(226,75,74,0.07); border: 1px solid rgba(226,75,74,0.2); }
-  .alert-title { font-size: 0.85rem; font-weight: 500; color: var(--red); }
-  .alert-body { font-size: 0.78rem; color: var(--ink-soft); margin-top: 3px; }
+.toggles { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+.tog {
+  padding: 5px 14px; border-radius: 20px;
+  border: 1.5px solid; font-size: 0.8rem;
+  font-family: 'DM Sans', sans-serif; cursor: pointer; font-weight: 500;
+  transition: all 0.15s;
+}
+.tog.opt { border-color: var(--teal); color: var(--teal); background: transparent; }
+.tog.opt.on { background: var(--teal); color: #fff; }
+.tog.mod { border-color: var(--blue); color: var(--blue); background: transparent; }
+.tog.mod.on { background: var(--blue); color: #fff; }
+.tog.con { border-color: var(--amber); color: var(--amber); background: transparent; }
+.tog.con.on { background: var(--amber); color: #fff; }
 
-  .progress-wrap { background: var(--surface); border-radius: 4px; height: 8px; overflow: hidden; margin-top: 6px; }
-  .progress-bar { height: 100%; border-radius: 4px; }
-  .loading { text-align: center; padding: 2rem; color: var(--ink-faint); font-size: 0.88rem; }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
-  @media (max-width: 600px) { main { padding: 1rem; } .metric-value { font-size: 1.1rem; } header { padding: 0 1rem; } }
+.tbox { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.5rem; }
+.tbox-head { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); font-family: 'DM Serif Display', serif; font-size: 1rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+thead tr { background: var(--surface); }
+th { padding: 9px 12px; text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); font-weight: 500; white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--surface); }
+.brow td { font-weight: 600; background: rgba(184,146,46,0.04); }
+
+.fbox { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; }
+.ftitle { font-family: 'DM Serif Display', serif; font-size: 1rem; margin-bottom: 1.2rem; }
+.fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1rem; }
+.fg { display: flex; flex-direction: column; gap: 4px; }
+.fg label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); font-weight: 500; }
+input, select {
+  height: 40px; padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+  color: var(--ink); background: var(--surface);
+}
+input:focus, select:focus { outline: none; border-color: var(--gold); background: #fff; }
+.btn {
+  height: 40px; padding: 0 1.5rem;
+  background: var(--gold); color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500;
+  cursor: pointer;
+}
+.btn:hover { background: var(--gold-light); }
+.msg { font-size: 0.82rem; padding: 8px 12px; border-radius: var(--radius-sm); margin-top: 8px; display: none; }
+.msg.ok  { background: rgba(29,158,117,0.1); color: var(--teal); display: block; }
+.msg.err { background: rgba(226,75,74,0.1);  color: var(--red);  display: block; }
+
+.badge { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 0.7rem; font-weight: 500; }
+.bg-g { background: rgba(29,158,117,0.12); color: var(--teal); }
+.bg-r { background: rgba(226,75,74,0.12);  color: var(--red); }
+.bg-o { background: rgba(184,146,46,0.12); color: var(--gold); }
+.bg-b { background: rgba(55,138,221,0.12); color: var(--blue); }
+
+.nwbanner {
+  background: var(--ink); border-radius: var(--radius);
+  padding: 1.5rem 2rem; margin-bottom: 1.5rem;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+.nwlabel { color: var(--gold); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+.nwval { font-family: 'DM Serif Display', serif; font-size: 2rem; color: #fff; }
+.nwsub { font-size: 0.78rem; color: var(--ink-faint); margin-top: 2px; }
+.nwitems { display: flex; gap: 2rem; flex-wrap: wrap; }
+.nwitem { text-align: right; }
+.nwitem-label { color: var(--ink-faint); font-size: 0.73rem; }
+.nwitem-val { font-size: 1.05rem; font-weight: 500; margin-top: 2px; }
+
+.alert {
+  border-radius: var(--radius-sm); padding: 12px 16px;
+  margin-bottom: 1.25rem;
+  background: rgba(226,75,74,0.07); border: 1px solid rgba(226,75,74,0.2);
+  display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.alert-title { font-size: 0.85rem; font-weight: 500; color: var(--red); }
+.alert-body  { font-size: 0.78rem; color: var(--ink-soft); margin-top: 3px; }
+
+.prog-wrap { background: var(--surface); border-radius: 4px; height: 8px; overflow: hidden; margin-top: 6px; }
+.prog-bar  { height: 100%; border-radius: 4px; background: var(--teal); transition: width 0.4s; }
+
+.empty { text-align: center; padding: 2rem; color: var(--ink-faint); font-size: 0.85rem; }
+
+@media(max-width:600px) { main { padding: 1rem; } header { padding: 0 1rem; } .nwval { font-size: 1.5rem; } }
 </style>
 </head>
 <body>
 
-    <h1>Wealth Tracker</h1>
-    <p style="margin-top:6px;">Martin &amp; Oksana</p>
-  </div>
-  <div>
-    <p style="margin-bottom:12px;">Enter PIN to continue</p>
+<header>
+  <div class="brand">
+    <div class="logo">W</div>
+    <div>
+      <div class="brand-title">Wealth Tracker</div>
+      <div class="brand-sub">Martin &amp; Oksana</div>
     </div>
   </div>
-  </div>
-</div>
-
-<header>
-  <div class="header-brand">
-    <div class="header-logo">W</div>
-    <div><div class="header-title">Wealth Tracker</div><div class="header-sub">Martin &amp; Oksana</div></div>
-  </div>
-  <div class="header-date" id="headerDate"></div>
+  <div id="hDate"></div>
 </header>
 
 <nav>
-  <button class="nav-tab active" onclick="showSection('dashboard',this)">Dashboard</button>
-  <button class="nav-tab" onclick="showSection('projections',this)">Projections</button>
-  <button class="nav-tab" onclick="showSection('avp',this)">Actual vs Projected</button>
-  <button class="nav-tab" onclick="showSection('mortgage',this)">Mortgage Tracker</button>
-  <button class="nav-tab" onclick="showSection('property',this)">Property Summary</button>
-  <button class="nav-tab" onclick="showSection('tenantlog',this)">Tenant Income Log</button>
-  <button class="nav-tab" onclick="showSection('mortlog',this)">Mortgage Payment Log</button>
-  <button class="nav-tab" onclick="showSection('settlement',this)">Settlement Tracker</button>
+  <button class="tab on"  onclick="go('dashboard',this)">Dashboard</button>
+  <button class="tab" onclick="go('projections',this)">Projections</button>
+  <button class="tab" onclick="go('avp',this)">Actual vs Projected</button>
+  <button class="tab" onclick="go('mortgage',this)">Mortgage Tracker</button>
+  <button class="tab" onclick="go('property',this)">Property Summary</button>
+  <button class="tab" onclick="go('tenantlog',this)">Tenant Income Log</button>
+  <button class="tab" onclick="go('mortlog',this)">Mortgage Payment Log</button>
+  <button class="tab" onclick="go('settlement',this)">Settlement Tracker</button>
 </nav>
 
 <main>
 
 <!-- DASHBOARD -->
-<div class="section active" id="sec-dashboard">
-  <h2 class="section-heading">Dashboard</h2>
-  <p class="section-sub">Live snapshot — Azizi Riviera 12 1BR &amp; ATFX Investment</p>
+<div class="page on" id="pg-dashboard">
+  <div class="h1">Dashboard</div>
+  <div class="sub">Live snapshot — Azizi Riviera 12 1BR &amp; ATFX Investment</div>
 
-  <div class="networth-banner">
+  <div class="nwbanner">
     <div>
-      <div class="networth-label">Estimated Net Worth</div>
-      <div class="networth-value" id="netWorthVal">Calculating...</div>
-      <div class="networth-sub">Trading portfolio + property equity</div>
+      <div class="nwlabel">Estimated Net Worth</div>
+      <div class="nwval" id="nwVal">Calculating...</div>
+      <div class="nwsub">Trading portfolio + property equity</div>
     </div>
-    <div class="networth-items">
-      <div class="networth-item">
-        <div style="color:var(--ink-faint);font-size:0.75rem;">Trading Portfolio</div>
-        <div style="color:var(--gold);font-size:1.1rem;font-weight:500;" id="dbPortfolio">—</div>
+    <div class="nwitems">
+      <div class="nwitem">
+        <div class="nwitem-label">Trading Portfolio</div>
+        <div class="nwitem-val" style="color:var(--gold)" id="nwPortfolio">—</div>
       </div>
-      <div class="networth-item">
-        <div style="color:var(--ink-faint);font-size:0.75rem;">Property Value</div>
-        <div style="color:#fff;font-size:1.1rem;font-weight:500;">1.075M AED</div>
+      <div class="nwitem">
+        <div class="nwitem-label">Property Value</div>
+        <div class="nwitem-val" style="color:#fff">1.075M AED</div>
       </div>
-      <div class="networth-item">
-        <div style="color:var(--ink-faint);font-size:0.75rem;">Mortgage Outstanding</div>
-        <div style="color:var(--red);font-size:1.1rem;font-weight:500;" id="dbMortOut">850,280 AED</div>
+      <div class="nwitem">
+        <div class="nwitem-label">Mortgage Outstanding</div>
+        <div class="nwitem-val" style="color:var(--red)" id="nwMort">—</div>
       </div>
     </div>
   </div>
 
-  <div class="metric-grid">
-    <div class="metric-card gold-accent">
-      <div class="metric-label">ATFX Balance (Actual)</div>
-      <div class="metric-value gold" id="dbActual">No data</div>
-      <div class="metric-sub" id="dbActualDate">Enter first actual balance</div>
+  <div class="grid">
+    <div class="card gold">
+      <div class="clabel">ATFX Balance (Actual)</div>
+      <div class="cval gold" id="dbActual">No data</div>
+      <div class="csub" id="dbActualDate">Log your first balance</div>
     </div>
-    <div class="metric-card teal-accent">
-      <div class="metric-label">Projected (Moderate)</div>
-      <div class="metric-value teal" id="dbProjMod">—</div>
-      <div class="metric-sub">8%/month scenario</div>
+    <div class="card teal">
+      <div class="clabel">Projected — Moderate</div>
+      <div class="cval teal" id="dbProjMod">—</div>
+      <div class="csub">8% / month scenario</div>
     </div>
-    <div class="metric-card gold-accent">
-      <div class="metric-label">Quarterly Rent Income</div>
-      <div class="metric-value gold" id="dbRent">—</div>
-      <div class="metric-sub" id="dbRentSub">Azizi Riviera 12 1BR</div>
+    <div class="card gold">
+      <div class="clabel">Quarterly Rent Income</div>
+      <div class="cval gold" id="dbRent">—</div>
+      <div class="csub">Azizi Riviera 12 1BR</div>
     </div>
-    <div class="metric-card red-accent">
-      <div class="metric-label">Monthly Mortgage EMI</div>
-      <div class="metric-value red" id="dbEMI">6,453 AED</div>
-      <div class="metric-sub">Martin 3,227 + Oksana 3,227</div>
+    <div class="card red">
+      <div class="clabel">Monthly Mortgage EMI</div>
+      <div class="cval red">6,453 AED</div>
+      <div class="csub">Martin 3,227 + Oksana 3,227</div>
     </div>
-    <div class="metric-card teal-accent">
-      <div class="metric-label">Net Quarterly Surplus</div>
-      <div class="metric-value teal" id="dbSurplus">—</div>
-      <div class="metric-sub">Rent minus 3x EMI into trading</div>
+    <div class="card teal">
+      <div class="clabel">Net Quarterly Surplus</div>
+      <div class="cval teal" id="dbSurplus">—</div>
+      <div class="csub">Rent minus 3x EMI → trading</div>
     </div>
-    <div class="metric-card blue-accent">
-      <div class="metric-label">Days Since Investment Start</div>
-      <div class="metric-value blue" id="dbDays">—</div>
-      <div class="metric-sub">From 9 Apr 2026</div>
+    <div class="card blue">
+      <div class="clabel">Days Since Start</div>
+      <div class="cval blue" id="dbDays">—</div>
+      <div class="csub">From 9 Apr 2026</div>
     </div>
   </div>
 
-  <div class="chart-card">
-    <div class="chart-header">
-      <div class="chart-title">Portfolio Growth — All Scenarios</div>
-      <div class="chart-legend">
-        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Optimistic</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#378ADD"></span>Moderate</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#BA7517"></span>Conservative</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#b8922e;border-radius:50%;"></span>Actual</span>
+  <div class="box">
+    <div class="box-head">
+      <div class="box-title">Portfolio Growth — All Scenarios</div>
+      <div class="legend">
+        <span class="leg"><span class="legdot" style="background:#1D9E75"></span>Optimistic</span>
+        <span class="leg"><span class="legdot" style="background:#378ADD"></span>Moderate</span>
+        <span class="leg"><span class="legdot" style="background:#BA7517"></span>Conservative</span>
+        <span class="leg"><span class="legdot" style="background:#b8922e;border-radius:50%"></span>Actual</span>
       </div>
     </div>
-    <div class="chart-wrap"><canvas id="dashChart" role="img" aria-label="Portfolio growth chart"></canvas></div>
+    <div class="cw"><canvas id="dashChart" role="img" aria-label="Portfolio growth"></canvas></div>
   </div>
 
-  <div class="metric-grid">
-    <div class="metric-card">
-      <div class="metric-label">Next Tenant Cheque</div>
-      <div class="metric-value" id="dbNextCheque">21,250 AED</div>
-      <div class="metric-sub">18 Jun 2026</div>
+  <div class="grid">
+    <div class="card">
+      <div class="clabel">Next Tenant Cheque</div>
+      <div class="cval" id="dbNextCheque">21,250 AED</div>
+      <div class="csub">18 Jun 2026</div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">Mortgage Payments Made</div>
-      <div class="metric-value" id="dbPaysMade">3</div>
-      <div class="metric-sub">28 Feb + 1 Apr 2026</div>
+    <div class="card">
+      <div class="clabel">Mortgage Payments Made</div>
+      <div class="cval" id="dbPaysMade">3</div>
+      <div class="csub">Feb + Mar + Apr 2026</div>
     </div>
-    <div class="metric-card red-accent">
-      <div class="metric-label">Mortgage Outstanding</div>
-      <div class="metric-value red" id="dbMortRemain">850,280 AED</div>
-      <div class="metric-sub" id="dbMortPct">1.13% paid to date</div>
+    <div class="card red">
+      <div class="clabel">Mortgage Outstanding</div>
+      <div class="cval red" id="dbMortRem">850,280 AED</div>
+      <div class="csub" id="dbMortPct">1.13% paid</div>
     </div>
-    <div class="metric-card red-accent">
-      <div class="metric-label">Upfront Settlement</div>
-      <div class="metric-value red">45,761 AED</div>
-      <div class="metric-sub">Martin owes Oksana</div>
+    <div class="card red">
+      <div class="clabel">Settlement Outstanding</div>
+      <div class="cval red" id="dbSettlement">45,761 AED</div>
+      <div class="csub">Martin owes Oksana</div>
     </div>
   </div>
 </div>
 
 <!-- PROJECTIONS -->
-<div class="section" id="sec-projections">
-  <h2 class="section-heading">Projections</h2>
-  <p class="section-sub">ATFX portfolio forecast — quarterly rental reinvestment, monthly mortgage withdrawal, 6.5% annual rent growth</p>
+<div class="page" id="pg-projections">
+  <div class="h1">Projections</div>
+  <div class="sub">ATFX portfolio forecast — quarterly rental reinvestment, monthly EMI withdrawal, 6.5% rent growth</div>
 
-  <div class="scenario-toggles">
-    <button class="toggle-btn opt on" id="tog-opt" onclick="toggleScenario('opt')">Optimistic 15.15%/mo</button>
-    <button class="toggle-btn mod on" id="tog-mod" onclick="toggleScenario('mod')">Moderate 8%/mo</button>
-    <button class="toggle-btn con on" id="tog-con" onclick="toggleScenario('con')">Conservative 5%/mo</button>
+  <div class="toggles">
+    <button class="tog opt on" id="tog-opt" onclick="togScenario('opt')">Optimistic 15.15%/mo</button>
+    <button class="tog mod on" id="tog-mod" onclick="togScenario('mod')">Moderate 8%/mo</button>
+    <button class="tog con on" id="tog-con" onclick="togScenario('con')">Conservative 5%/mo</button>
   </div>
 
-  <div class="chart-card">
-    <div class="chart-header">
-      <div class="chart-title">Portfolio Projection</div>
-      <select id="projYears" onchange="buildProjectionChart()" style="width:auto;height:34px;font-size:0.8rem;">
+  <div class="box">
+    <div class="box-head">
+      <div class="box-title">Portfolio Projection</div>
+      <select id="projYrs" onchange="buildProjChart()" style="width:auto;height:34px;font-size:0.8rem">
         <option value="3">3 Years</option>
         <option value="5">5 Years</option>
         <option value="10" selected>10 Years</option>
         <option value="15">15 Years</option>
       </select>
     </div>
-    <div class="chart-wrap" style="height:360px;"><canvas id="projChart" role="img" aria-label="Projection chart"></canvas></div>
+    <div class="cw" style="height:360px"><canvas id="projChart" role="img" aria-label="Projection chart"></canvas></div>
   </div>
 
-  <div class="table-card">
-    <div class="table-card-header"><div class="table-card-title">Year-by-Year Milestone Table</div></div>
-    <div style="overflow-x:auto;">
+  <div class="tbox">
+    <div class="tbox-head">Year-by-Year Milestones</div>
+    <div style="overflow-x:auto">
       <table>
         <thead><tr>
-          <th>Date</th><th>Rent/Qtr</th>
-          <th style="color:var(--red)">EMI/mo</th>
+          <th>Date</th><th>Rent / Qtr</th>
+          <th style="color:var(--red)">EMI / mo</th>
           <th style="color:var(--teal)">Optimistic</th>
           <th style="color:var(--blue)">Moderate</th>
           <th style="color:var(--amber)">Conservative</th>
         </tr></thead>
-        <tbody id="projTableBody"></tbody>
+        <tbody id="projTbody"></tbody>
       </table>
     </div>
   </div>
 </div>
 
 <!-- ACTUAL VS PROJECTED -->
-<div class="section" id="sec-avp">
-  <h2 class="section-heading">Actual vs Projected</h2>
-  <p class="section-sub">Log your real ATFX balance each month and track against all three scenarios</p>
+<div class="page" id="pg-avp">
+  <div class="h1">Actual vs Projected</div>
+  <div class="sub">Log your real ATFX balance each month and compare against projections</div>
 
-  <div class="form-card">
-    <div class="form-title">Log Actual ATFX Balance</div>
-    <div class="form-grid">
-      <div class="form-group"><label>Month</label><input type="month" id="avpMonth"></div>
-      <div class="form-group"><label>Actual Balance (AED)</label><input type="number" id="avpBalance" placeholder="e.g. 42500"></div>
-      <div class="form-group"><label>Notes (optional)</label><input type="text" id="avpNotes" placeholder="e.g. Strong gold month"></div>
+  <div class="fbox">
+    <div class="ftitle">Log Actual ATFX Balance</div>
+    <div class="fgrid">
+      <div class="fg"><label>Month</label><input type="month" id="avpMonth"></div>
+      <div class="fg"><label>Balance (AED)</label><input type="number" id="avpBal" placeholder="e.g. 42500"></div>
+      <div class="fg"><label>Notes</label><input type="text" id="avpNotes" placeholder="Optional"></div>
     </div>
-    <button class="btn btn-primary" onclick="saveActualBalance()">Save Balance</button>
-    <div class="status-msg" id="avpStatus"></div>
+    <button class="btn" onclick="saveAVP()">Save Balance</button>
+    <div class="msg" id="avpMsg"></div>
   </div>
 
-  <div class="metric-grid">
-    <div class="metric-card gold-accent">
-      <div class="metric-label">Latest Actual Balance</div>
-      <div class="metric-value gold" id="avpLatest">No data</div>
-      <div class="metric-sub" id="avpLatestDate">—</div>
+  <div class="grid">
+    <div class="card gold">
+      <div class="clabel">Latest Actual</div>
+      <div class="cval gold" id="avpLatest">No data</div>
+      <div class="csub" id="avpLatestDate">—</div>
     </div>
-    <div class="metric-card teal-accent">
-      <div class="metric-label">vs Moderate Projection</div>
-      <div class="metric-value" id="avpVsMod">—</div>
-      <div class="metric-sub" id="avpVsModPct">—</div>
+    <div class="card teal">
+      <div class="clabel">vs Moderate</div>
+      <div class="cval" id="avpVsMod">—</div>
+      <div class="csub" id="avpVsModPct">—</div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">vs Optimistic Projection</div>
-      <div class="metric-value" id="avpVsOpt">—</div>
-      <div class="metric-sub" id="avpVsOptPct">—</div>
+    <div class="card">
+      <div class="clabel">vs Optimistic</div>
+      <div class="cval" id="avpVsOpt">—</div>
+      <div class="csub" id="avpVsOptPct">—</div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">vs Conservative Projection</div>
-      <div class="metric-value" id="avpVsCon">—</div>
-      <div class="metric-sub" id="avpVsConPct">—</div>
+    <div class="card">
+      <div class="clabel">vs Conservative</div>
+      <div class="cval" id="avpVsCon">—</div>
+      <div class="csub" id="avpVsConPct">—</div>
     </div>
   </div>
 
-  <div class="chart-card">
-    <div class="chart-header">
-      <div class="chart-title">Actual vs Projected Balance</div>
-      <div class="chart-legend">
-        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Optimistic</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#378ADD"></span>Moderate</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#BA7517"></span>Conservative</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#b8922e;border-radius:50%;width:10px;height:10px;display:inline-block;"></span>Actual</span>
+  <div class="box">
+    <div class="box-head">
+      <div class="box-title">Actual vs Projected</div>
+      <div class="legend">
+        <span class="leg"><span class="legdot" style="background:#1D9E75"></span>Optimistic</span>
+        <span class="leg"><span class="legdot" style="background:#378ADD"></span>Moderate</span>
+        <span class="leg"><span class="legdot" style="background:#BA7517"></span>Conservative</span>
+        <span class="leg"><span class="legdot" style="background:#b8922e;border-radius:50%"></span>Actual</span>
       </div>
     </div>
-    <div class="chart-wrap"><canvas id="avpChart" role="img" aria-label="Actual vs projected chart"></canvas></div>
+    <div class="cw"><canvas id="avpChart" role="img" aria-label="Actual vs projected"></canvas></div>
   </div>
 
-  <div class="table-card">
-    <div class="table-card-header"><div class="table-card-title">Balance History</div></div>
-    <div style="overflow-x:auto;">
+  <div class="tbox">
+    <div class="tbox-head">Balance History</div>
+    <div style="overflow-x:auto">
       <table>
-        <thead><tr><th>Month</th><th>Actual Balance</th><th>Projected (Moderate)</th><th>Variance</th><th>Notes</th></tr></thead>
-        <tbody id="avpTableBody"></tbody>
+        <thead><tr><th>Month</th><th>Actual</th><th>Moderate Projection</th><th>Variance</th><th>Notes</th></tr></thead>
+        <tbody id="avpTbody"></tbody>
       </table>
     </div>
   </div>
 </div>
 
 <!-- MORTGAGE TRACKER -->
-<div class="section" id="sec-mortgage">
-  <h2 class="section-heading">Mortgage Tracker</h2>
-  <p class="section-sub">Azizi Riviera 12 1BR — payment schedule and balance</p>
+<div class="page" id="pg-mortgage">
+  <div class="h1">Mortgage Tracker</div>
+  <div class="sub">Azizi Riviera 12 1BR — balance, payments and rate schedule</div>
 
-  <div class="metric-grid">
-    <div class="metric-card red-accent">
-      <div class="metric-label">Current Monthly EMI</div>
-      <div class="metric-value red" id="mtEMI">6,453 AED</div>
-      <div class="metric-sub">Martin 3,227 + Oksana 3,227</div>
+  <div class="grid">
+    <div class="card red">
+      <div class="clabel">Current Monthly EMI</div>
+      <div class="cval red" id="mtEMI">6,453 AED</div>
+      <div class="csub">Martin 3,227 + Oksana 3,227</div>
     </div>
-    <div class="metric-card red-accent">
-      <div class="metric-label">Outstanding Balance</div>
-      <div class="metric-value red" id="mtRemaining">850,280 AED</div>
-      <div class="metric-sub" id="mtPaidPct">1.13% paid to date</div>
+    <div class="card red">
+      <div class="clabel">Outstanding Balance</div>
+      <div class="cval red" id="mtBal">850,280 AED</div>
+      <div class="csub" id="mtPct">1.13% paid</div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">Original Loan</div>
-      <div class="metric-value">860,000 AED</div>
-      <div class="metric-sub">Purchase price 1,075,000 AED</div>
+    <div class="card">
+      <div class="clabel">Original Loan</div>
+      <div class="cval">860,000 AED</div>
+      <div class="csub">Purchase price 1,075,000 AED</div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">Payments Made</div>
-      <div class="metric-value" id="mtPaysMade">3</div>
-      <div class="metric-sub">28 Feb + 1 Mar + 1 Apr 2026</div>
+    <div class="card">
+      <div class="clabel">Payments Made</div>
+      <div class="cval" id="mtPays">3</div>
+      <div class="csub">Feb + Mar + Apr 2026</div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">Next Rate Increase</div>
-      <div class="metric-value">Apr 2029</div>
-      <div class="metric-sub">+4% on current EMI</div>
+    <div class="card">
+      <div class="clabel">Next Rate Increase</div>
+      <div class="cval">Apr 2029</div>
+      <div class="csub">+4% on current EMI</div>
     </div>
-    <div class="metric-card teal-accent">
-      <div class="metric-label">Mortgage Clears</div>
-      <div class="metric-value teal">~Feb 2039</div>
-      <div class="metric-sub">150 months from Feb 2026</div>
+    <div class="card teal">
+      <div class="clabel">Mortgage Clears</div>
+      <div class="cval teal">~Feb 2039</div>
+      <div class="csub">150 months from Feb 2026</div>
     </div>
   </div>
 
-  <div class="chart-card">
-    <div class="chart-header"><div class="chart-title">Mortgage Balance Decline vs Equity Growth</div></div>
-    <div class="chart-wrap"><canvas id="mortChart" role="img" aria-label="Mortgage decline and equity chart"></canvas></div>
+  <div class="box">
+    <div class="box-head">
+      <div class="box-title">Balance Decline vs Equity Growth</div>
+      <div class="legend">
+        <span class="leg"><span class="legdot" style="background:#1D9E75"></span>Equity</span>
+        <span class="leg"><span class="legdot" style="background:#E24B4A"></span>Outstanding</span>
+      </div>
+    </div>
+    <div class="cw"><canvas id="mortChart" role="img" aria-label="Mortgage chart"></canvas></div>
   </div>
 
-  <div class="table-card">
-    <div class="table-card-header"><div class="table-card-title">EMI Rate Increase Schedule</div></div>
-    <div style="overflow-x:auto;">
+  <div class="tbox">
+    <div class="tbox-head">EMI Rate Increase Schedule</div>
+    <div style="overflow-x:auto">
       <table>
         <thead><tr><th>Period</th><th>From</th><th>To</th><th>Monthly EMI</th><th>Status</th></tr></thead>
-        <tbody id="mortScheduleBody"></tbody>
+        <tbody id="mortSched"></tbody>
       </table>
     </div>
   </div>
 </div>
 
 <!-- PROPERTY SUMMARY -->
-<div class="section" id="sec-property">
-  <h2 class="section-heading">Property Summary</h2>
-  <p class="section-sub">Azizi Riviera 12 1BR — full financial breakdown</p>
+<div class="page" id="pg-property">
+  <div class="h1">Property Summary</div>
+  <div class="sub">Azizi Riviera 12 1BR — full financial breakdown</div>
 
-  <div class="alert-banner red" id="settlementAlertBanner">
+  <div class="alert">
     <div>
       <div class="alert-title">Upfront Cost Settlement Outstanding</div>
-      <div class="alert-body" id="settlementAlertText">Total upfront costs 291,522 AED split 50/50 (145,761 each). Martin reimbursed 100,000 AED. Martin still owes Oksana <strong>45,761 AED</strong>. <a href="#" onclick="document.querySelector('[onclick*=settlement]').click();return false;" style="color:var(--red);font-weight:500;">View Settlement Tracker →</a></div>
+      <div class="alert-body">Total upfront costs 291,522 AED split 50/50 (145,761 each). Martin reimbursed 100,000 AED. Martin still owes Oksana <strong>45,761 AED</strong>.</div>
     </div>
-    <span class="badge badge-red" id="settlementBadge">45,761 AED outstanding</span>
+    <span class="badge bg-r">45,761 AED outstanding</span>
   </div>
 
-  <div class="metric-grid">
-    <div class="metric-card gold-accent">
-      <div class="metric-label">Purchase Price</div>
-      <div class="metric-value gold">1,075,000 AED</div>
-      <div class="metric-sub">Azizi Riviera 12 — 1BR</div>
-    </div>
-    <div class="metric-card red-accent">
-      <div class="metric-label">Original Mortgage</div>
-      <div class="metric-value red">860,000 AED</div>
-      <div class="metric-sub">~80% LTV at purchase</div>
-    </div>
-    <div class="metric-card red-accent">
-      <div class="metric-label">Current Outstanding</div>
-      <div class="metric-value red" id="propOutstanding">850,280 AED</div>
-      <div class="metric-sub">After 3 EMI payments</div>
-    </div>
-    <div class="metric-card red-accent">
-      <div class="metric-label">Monthly EMI</div>
-      <div class="metric-value red">6,453 AED</div>
-      <div class="metric-sub">Martin 3,227 + Oksana 3,227</div>
-    </div>
-    <div class="metric-card gold-accent">
-      <div class="metric-label">Quarterly Rent</div>
-      <div class="metric-value gold" id="propRent">21,250 AED</div>
-      <div class="metric-sub">Growing 6.5% annually</div>
-    </div>
-    <div class="metric-card teal-accent">
-      <div class="metric-label">Quarterly Net Surplus</div>
-      <div class="metric-value teal" id="propSurplus">1,991 AED</div>
-      <div class="metric-sub">Rent minus 3x EMI into trading</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Annual Rental Yield</div>
-      <div class="metric-value">7.9%</div>
-      <div class="metric-sub">85,000 / 1,075,000 AED</div>
-    </div>
-    <div class="metric-card blue-accent">
-      <div class="metric-label">Oksana Income Logged</div>
-      <div class="metric-value blue">29,311 AED</div>
-      <div class="metric-sub">From property income sheet</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Total Upfront Costs</div>
-      <div class="metric-value">291,522 AED</div>
-      <div class="metric-sub">145,761 AED each (50/50)</div>
-    </div>
+  <div class="grid">
+    <div class="card gold"><div class="clabel">Purchase Price</div><div class="cval gold">1,075,000 AED</div><div class="csub">Azizi Riviera 12 — 1BR</div></div>
+    <div class="card red"><div class="clabel">Original Mortgage</div><div class="cval red">860,000 AED</div><div class="csub">~80% LTV at purchase</div></div>
+    <div class="card red"><div class="clabel">Current Outstanding</div><div class="cval red">850,280 AED</div><div class="csub">After 3 EMI payments</div></div>
+    <div class="card red"><div class="clabel">Monthly EMI</div><div class="cval red">6,453 AED</div><div class="csub">Martin 3,227 + Oksana 3,227</div></div>
+    <div class="card gold"><div class="clabel">Quarterly Rent</div><div class="cval gold" id="propRent">21,250 AED</div><div class="csub">Growing 6.5% annually</div></div>
+    <div class="card teal"><div class="clabel">Quarterly Net Surplus</div><div class="cval teal" id="propSurplus">1,591 AED</div><div class="csub">Rent minus 3x EMI → trading</div></div>
+    <div class="card"><div class="clabel">Annual Rental Yield</div><div class="cval">7.9%</div><div class="csub">85,000 / 1,075,000 AED</div></div>
+    <div class="card blue"><div class="clabel">Oksana Income Logged</div><div class="cval blue">29,311 AED</div><div class="csub">From property income sheet</div></div>
+    <div class="card"><div class="clabel">Upfront Costs Total</div><div class="cval">291,522 AED</div><div class="csub">145,761 AED each (50/50)</div></div>
   </div>
 
-  <div class="chart-card">
-    <div class="chart-header"><div class="chart-title">Monthly Rent Equivalent vs EMI — 15 Year View</div>
-      <div class="chart-legend">
-        <span class="legend-item"><span class="legend-dot" style="background:rgba(184,146,46,0.75)"></span>Monthly rent equiv.</span>
-        <span class="legend-item"><span class="legend-dot" style="background:rgba(226,75,74,0.75)"></span>Monthly EMI</span>
+  <div class="box">
+    <div class="box-head">
+      <div class="box-title">Monthly Rent Equivalent vs EMI — 15 Year View</div>
+      <div class="legend">
+        <span class="leg"><span class="legdot" style="background:rgba(184,146,46,0.8)"></span>Rent equiv.</span>
+        <span class="leg"><span class="legdot" style="background:rgba(226,75,74,0.8)"></span>EMI</span>
       </div>
     </div>
-    <div class="chart-wrap"><canvas id="propChart" role="img" aria-label="Rent vs EMI chart"></canvas></div>
+    <div class="cw"><canvas id="propChart" role="img" aria-label="Rent vs EMI"></canvas></div>
   </div>
 
-  <div class="chart-card">
-    <div class="chart-header"><div class="chart-title">Equity Growth Over Time</div>
-      <div class="chart-legend">
-        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Equity built</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#E24B4A"></span>Outstanding balance</span>
+  <div class="box">
+    <div class="box-head">
+      <div class="box-title">Equity Growth Over Time</div>
+      <div class="legend">
+        <span class="leg"><span class="legdot" style="background:#1D9E75"></span>Equity built</span>
+        <span class="leg"><span class="legdot" style="background:#E24B4A"></span>Outstanding</span>
       </div>
     </div>
-    <div class="chart-wrap"><canvas id="equityChart" role="img" aria-label="Equity growth chart"></canvas></div>
+    <div class="cw"><canvas id="equityChart" role="img" aria-label="Equity chart"></canvas></div>
   </div>
 </div>
 
 <!-- TENANT INCOME LOG -->
-<div class="section" id="sec-tenantlog">
-  <h2 class="section-heading">Tenant Income Log</h2>
-  <p class="section-sub">Record all rental income received — Azizi Riviera 12 1BR</p>
+<div class="page" id="pg-tenantlog">
+  <div class="h1">Tenant Income Log</div>
+  <div class="sub">Record all rental income received — Azizi Riviera 12 1BR</div>
 
-  <div class="form-card">
-    <div class="form-title">Log Tenant Income</div>
-    <div class="form-grid">
-      <div class="form-group"><label>Date Received</label><input type="date" id="ti-date"></div>
-      <div class="form-group"><label>Amount (AED)</label><input type="number" id="ti-amount" placeholder="e.g. 21250"></div>
-      <div class="form-group"><label>Cheque / Reference</label><input type="text" id="ti-ref" placeholder="Cheque #"></div>
-      <div class="form-group"><label>Notes</label><input type="text" id="ti-notes" placeholder="Optional"></div>
+  <div class="fbox">
+    <div class="ftitle">Log Tenant Income</div>
+    <div class="fgrid">
+      <div class="fg"><label>Date Received</label><input type="date" id="tiDate"></div>
+      <div class="fg"><label>Amount (AED)</label><input type="number" id="tiAmt" placeholder="e.g. 21250"></div>
+      <div class="fg"><label>Cheque / Reference</label><input type="text" id="tiRef" placeholder="Cheque #"></div>
+      <div class="fg"><label>Notes</label><input type="text" id="tiNotes" placeholder="Optional"></div>
     </div>
-    <button class="btn btn-primary" onclick="saveTenantIncome()">Save Entry</button>
-    <div class="status-msg" id="tiStatus"></div>
+    <button class="btn" onclick="saveTI()">Save Entry</button>
+    <div class="msg" id="tiMsg"></div>
   </div>
 
-  <div class="metric-grid">
-    <div class="metric-card gold-accent">
-      <div class="metric-label">Total Received to Date</div>
-      <div class="metric-value gold" id="tiTotal">0 AED</div>
-      <div class="metric-sub" id="tiCount">0 cheques logged</div>
-    </div>
-    <div class="metric-card teal-accent">
-      <div class="metric-label">Total Reinvested (ATFX)</div>
-      <div class="metric-value teal" id="tiReinvested">0 AED</div>
-      <div class="metric-sub">All rent into trading account</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Next Expected Cheque</div>
-      <div class="metric-value">21,250 AED</div>
-      <div class="metric-sub">18 Jun 2026</div>
-    </div>
+  <div class="grid">
+    <div class="card gold"><div class="clabel">Total Received</div><div class="cval gold" id="tiTotal">0 AED</div><div class="csub" id="tiCount">0 cheques logged</div></div>
+    <div class="card teal"><div class="clabel">Total Reinvested (ATFX)</div><div class="cval teal" id="tiReinvested">0 AED</div><div class="csub">All rent into trading</div></div>
+    <div class="card"><div class="clabel">Next Expected Cheque</div><div class="cval">21,250 AED</div><div class="csub">18 Jun 2026</div></div>
   </div>
 
-  <div class="table-card">
-    <div class="table-card-header"><div class="table-card-title">Income History</div></div>
-    <div style="overflow-x:auto;">
+  <div class="tbox">
+    <div class="tbox-head">Income History</div>
+    <div style="overflow-x:auto">
       <table>
         <thead><tr><th>Date</th><th>Amount</th><th>Reference</th><th>Notes</th></tr></thead>
-        <tbody id="tiTableBody"><tr><td colspan="4" class="loading">No entries yet. Log your first tenant income above.</td></tr></tbody>
+        <tbody id="tiTbody"><tr><td colspan="4" class="empty">No entries yet.</td></tr></tbody>
       </table>
     </div>
   </div>
 </div>
 
 <!-- MORTGAGE PAYMENT LOG -->
-<div class="section" id="sec-mortlog">
-  <h2 class="section-heading">Mortgage Payment Log</h2>
-  <p class="section-sub">Record all EMI payments — Azizi Riviera 12 1BR</p>
+<div class="page" id="pg-mortlog">
+  <div class="h1">Mortgage Payment Log</div>
+  <div class="sub">Record all EMI payments — Azizi Riviera 12 1BR</div>
 
-  <div class="form-card">
-    <div class="form-title">Log Mortgage Payment</div>
-    <div class="form-grid">
-      <div class="form-group"><label>Payment Date</label><input type="date" id="ml-date"></div>
-      <div class="form-group"><label>Amount Paid (AED)</label><input type="number" id="ml-amount" placeholder="e.g. 6453"></div>
-      <div class="form-group"><label>Payment Reference</label><input type="text" id="ml-ref" placeholder="Bank ref #"></div>
-      <div class="form-group"><label>Notes</label><input type="text" id="ml-notes" placeholder="Optional"></div>
+  <div class="fbox">
+    <div class="ftitle">Log Mortgage Payment</div>
+    <div class="fgrid">
+      <div class="fg"><label>Payment Date</label><input type="date" id="mlDate"></div>
+      <div class="fg"><label>Amount (AED)</label><input type="number" id="mlAmt" placeholder="e.g. 6453"></div>
+      <div class="fg"><label>Reference</label><input type="text" id="mlRef" placeholder="Bank ref #"></div>
+      <div class="fg"><label>Notes</label><input type="text" id="mlNotes" placeholder="Optional"></div>
     </div>
-    <button class="btn btn-primary" onclick="saveMortgagePayment()">Save Payment</button>
-    <div class="status-msg" id="mlStatus"></div>
+    <button class="btn" onclick="saveML()">Save Payment</button>
+    <div class="msg" id="mlMsg"></div>
   </div>
 
-  <div class="metric-grid">
-    <div class="metric-card red-accent">
-      <div class="metric-label">Total Paid to Date</div>
-      <div class="metric-value red" id="mlTotal">19,359 AED</div>
-      <div class="metric-sub" id="mlCount">3 payments logged</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Principal Paid</div>
-      <div class="metric-value" id="mlPrincipal">~9,720 AED</div>
-      <div class="metric-sub">Balance of 9,639 was interest</div>
-    </div>
-    <div class="metric-card teal-accent">
-      <div class="metric-label">Current Outstanding</div>
-      <div class="metric-value teal" id="mlOutstanding">850,280 AED</div>
-      <div class="metric-sub">After 3 payments</div>
-    </div>
+  <div class="grid">
+    <div class="card red"><div class="clabel">Total Paid</div><div class="cval red" id="mlTotal">19,359 AED</div><div class="csub" id="mlCount">3 payments logged</div></div>
+    <div class="card"><div class="clabel">Principal Paid (est.)</div><div class="cval" id="mlPrincipal">~9,720 AED</div><div class="csub">Balance was interest</div></div>
+    <div class="card teal"><div class="clabel">Outstanding Balance</div><div class="cval teal" id="mlOutstanding">850,280 AED</div><div class="csub">After 3 payments</div></div>
   </div>
 
-  <div class="table-card">
-    <div class="table-card-header"><div class="table-card-title">Payment History</div></div>
-    <div style="overflow-x:auto;">
+  <div class="tbox">
+    <div class="tbox-head">Payment History</div>
+    <div style="overflow-x:auto">
       <table>
         <thead><tr><th>Date</th><th>Amount</th><th>Reference</th><th>Notes</th></tr></thead>
-        <tbody id="mlTableBody"></tbody>
+        <tbody id="mlTbody"></tbody>
       </table>
     </div>
   </div>
 </div>
 
-
 <!-- SETTLEMENT TRACKER -->
-<div class="section" id="sec-settlement">
-  <h2 class="section-heading">Settlement Tracker</h2>
-  <p class="section-sub">Martin's upfront cost repayment to Oksana — log each payment made</p>
+<div class="page" id="pg-settlement">
+  <div class="h1">Settlement Tracker</div>
+  <div class="sub">Martin's upfront cost repayment to Oksana — log each payment made</div>
 
-  <div class="metric-grid">
-    <div class="metric-card red-accent">
-      <div class="metric-label">Total Amount Owed</div>
-      <div class="metric-value red">45,761 AED</div>
-      <div class="metric-sub">Martin's outstanding share</div>
-    </div>
-    <div class="metric-card teal-accent">
-      <div class="metric-label">Total Paid to Oksana</div>
-      <div class="metric-value teal" id="stPaid">0 AED</div>
-      <div class="metric-sub" id="stPaidCount">0 payments logged</div>
-    </div>
-    <div class="metric-card red-accent">
-      <div class="metric-label">Still Outstanding</div>
-      <div class="metric-value red" id="stOutstanding">45,761 AED</div>
-      <div class="metric-sub" id="stOutstandingPct">0% settled</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Expected Completion</div>
-      <div class="metric-value" id="stCompletion">—</div>
-      <div class="metric-sub" id="stCompletionSub">Based on payment frequency</div>
-    </div>
+  <div class="grid">
+    <div class="card red"><div class="clabel">Total Owed</div><div class="cval red">45,761 AED</div><div class="csub">Martin's outstanding share</div></div>
+    <div class="card teal"><div class="clabel">Total Paid to Oksana</div><div class="cval teal" id="stPaid">0 AED</div><div class="csub" id="stPaidCount">0 payments</div></div>
+    <div class="card red"><div class="clabel">Still Outstanding</div><div class="cval red" id="stRemaining">45,761 AED</div><div class="csub" id="stPct">0% settled</div></div>
+    <div class="card"><div class="clabel">Est. Completion</div><div class="cval" id="stCompletion">—</div><div class="csub" id="stCompletionSub">Log payments to estimate</div></div>
   </div>
 
-  <div class="chart-card">
-    <div class="chart-header"><div class="chart-title">Settlement Progress</div></div>
-    <div style="margin-bottom:0.5rem;display:flex;justify-content:space-between;font-size:0.8rem;color:var(--ink-soft);">
-      <span>0 AED</span>
-      <span id="stProgressLabel">45,761 AED remaining</span>
-      <span>45,761 AED</span>
+  <div class="box">
+    <div class="box-head"><div class="box-title">Settlement Progress</div></div>
+    <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--ink-soft);margin-bottom:6px">
+      <span>0 AED</span><span id="stProgLabel">45,761 AED remaining</span><span>45,761 AED</span>
     </div>
-    <div style="background:var(--surface);border-radius:8px;height:24px;overflow:hidden;margin-bottom:1rem;">
-      <div id="stProgressBar" style="height:100%;border-radius:8px;background:var(--teal);width:0%;transition:width 0.5s;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;">
-        <span id="stProgressPct" style="font-size:0.75rem;color:white;font-weight:500;"></span>
+    <div style="background:var(--surface);border-radius:8px;height:24px;overflow:hidden">
+      <div id="stProgBar" style="height:100%;border-radius:8px;background:var(--teal);width:0%;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;transition:width 0.4s">
+        <span id="stProgPct" style="font-size:0.72rem;color:#fff;font-weight:500"></span>
       </div>
     </div>
   </div>
 
-  <div class="form-card">
-    <div class="form-title">Log Payment to Oksana</div>
-    <div class="form-grid">
-      <div class="form-group"><label>Payment Date</label><input type="date" id="st-date"></div>
-      <div class="form-group"><label>Amount (AED)</label><input type="number" id="st-amount" placeholder="e.g. 5000"></div>
-      <div class="form-group"><label>Payment Method</label>
-        <select id="st-method">
-          <option value="Bank Transfer">Bank Transfer</option>
-          <option value="Cash">Cash</option>
-          <option value="Cheque">Cheque</option>
-          <option value="Other">Other</option>
+  <div class="fbox">
+    <div class="ftitle">Log Payment to Oksana</div>
+    <div class="fgrid">
+      <div class="fg"><label>Date</label><input type="date" id="stDate"></div>
+      <div class="fg"><label>Amount (AED)</label><input type="number" id="stAmt" placeholder="e.g. 5000"></div>
+      <div class="fg"><label>Method</label>
+        <select id="stMethod">
+          <option>Bank Transfer</option><option>Cash</option><option>Cheque</option><option>Other</option>
         </select>
       </div>
-      <div class="form-group"><label>Reference</label><input type="text" id="st-ref" placeholder="Bank ref / note"></div>
-      <div class="form-group"><label>Notes</label><input type="text" id="st-notes" placeholder="Optional"></div>
+      <div class="fg"><label>Reference</label><input type="text" id="stRef" placeholder="Optional"></div>
+      <div class="fg"><label>Notes</label><input type="text" id="stNotes" placeholder="Optional"></div>
     </div>
-    <button class="btn btn-primary" onclick="saveSettlementPayment()">Save Payment</button>
-    <div class="status-msg" id="stStatus"></div>
+    <button class="btn" onclick="saveST()">Save Payment</button>
+    <div class="msg" id="stMsg"></div>
   </div>
 
-  <div class="table-card">
-    <div class="table-card-header">
-      <div class="table-card-title">Payment History</div>
-    </div>
-    <div style="overflow-x:auto;">
+  <div class="tbox">
+    <div class="tbox-head">Payment History</div>
+    <div style="overflow-x:auto">
       <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Method</th>
-            <th>Reference</th>
-            <th>Running Balance</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody id="stTableBody"><tr><td colspan="7" class="loading">No payments logged yet. Add your first payment above.</td></tr></tbody>
+        <thead><tr><th>#</th><th>Date</th><th>Amount</th><th>Method</th><th>Reference</th><th>Running Balance</th><th>Notes</th></tr></thead>
+        <tbody id="stTbody"><tr><td colspan="7" class="empty">No payments logged yet.</td></tr></tbody>
       </table>
     </div>
   </div>
 
-  <div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border-soft);padding:1.5rem;margin-top:1rem;">
-    <div style="font-family:'DM Serif Display',serif;font-size:1rem;margin-bottom:1rem;">Upfront Cost Breakdown</div>
-    <table style="width:100%;font-size:0.82rem;border-collapse:collapse;">
-      <thead><tr style="background:var(--surface);"><th style="padding:8px 12px;text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);">Item</th><th style="padding:8px 12px;text-align:right;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);">Total</th><th style="padding:8px 12px;text-align:right;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);">Martin 50%</th><th style="padding:8px 12px;text-align:right;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);">Status</th></tr></thead>
-      <tbody>
-        <tr style="border-bottom:1px solid var(--border-soft);"><td style="padding:8px 12px;">Total Upfront Costs</td><td style="padding:8px 12px;text-align:right;">291,522 AED</td><td style="padding:8px 12px;text-align:right;">145,761 AED</td><td style="padding:8px 12px;text-align:right;"><span class="badge badge-red">Partial</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border-soft);"><td style="padding:8px 12px;">Martin Reimbursed</td><td style="padding:8px 12px;text-align:right;">—</td><td style="padding:8px 12px;text-align:right;color:var(--teal);">100,000 AED</td><td style="padding:8px 12px;text-align:right;"><span class="badge badge-green">Paid</span></td></tr>
-        <tr style="font-weight:600;background:rgba(226,75,74,0.04);"><td style="padding:8px 12px;">Remaining to Oksana</td><td style="padding:8px 12px;text-align:right;">—</td><td style="padding:8px 12px;text-align:right;color:var(--red);" id="stBreakdownRemaining">45,761 AED</td><td style="padding:8px 12px;text-align:right;"><span class="badge badge-red" id="stBreakdownBadge">Outstanding</span></td></tr>
-      </tbody>
-    </table>
+  <div class="tbox" style="margin-top:1rem">
+    <div class="tbox-head">Upfront Cost Breakdown</div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Item</th><th>Total</th><th>Martin 50%</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Total upfront costs</td><td>291,522 AED</td><td>145,761 AED</td><td><span class="badge bg-r">Partial</span></td></tr>
+          <tr><td>Martin reimbursed</td><td>—</td><td style="color:var(--teal)">100,000 AED</td><td><span class="badge bg-g">Paid</span></td></tr>
+          <tr class="brow"><td>Remaining to Oksana</td><td>—</td><td style="color:var(--red)" id="stBreakdown">45,761 AED</td><td><span class="badge bg-r" id="stBreakdownBadge">Outstanding</span></td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 </main>
 
 <script>
-const CONFIG = {
-  PIN: '1379',
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzaNsBZ0G0RrmgKEZpIUHrHVWcyY3thanIlzXwOZTdZP1WmO44PELiGMSClH14tO9IpuQ/exec',
-  START_DATE: new Date(2026,3,9),
-  MORT_START: new Date(2026,1,28),
-  RENT_BASE: 21250,
-  RENT_GROWTH: 0.065,
-  EMI_BASE: 6453,
-  EMI_INCREASE: 0.04,
-  MORT_MONTHS: 150,
-  MORT_OUTSTANDING: 850280,
-  MORT_ORIGINAL: 860000,
-  MORT_PAYMENTS_MADE: 3,
-  START_CAPITAL: 36700,
-  RATES: {opt:0.1515, mod:0.08, con:0.05}
-};
+// ─── SCRIPT URL ───────────────────────────────────────────────────
+var SCRIPT = 'https://script.google.com/macros/s/AKfycbzaNsBZ0G0RrmgKEZpIUHrHVWcyY3thanIlzXwOZTdZP1WmO44PELiGMSClH14tO9IpuQ/exec';
 
-let state = {actualBalances:[], tenantIncome:[], mortgagePayments:[]};
-function loadState() { try { const s=localStorage.getItem('wt_state2'); if(s) state=JSON.parse(s); } catch(e){} }
-function saveState() { localStorage.setItem('wt_state2', JSON.stringify(state)); }
-loadState();
+// ─── CONSTANTS ────────────────────────────────────────────────────
+var START      = new Date(2026,3,9);
+var MORT_START = new Date(2026,1,28);
+var RENT_BASE  = 21250;
+var RENT_GROW  = 0.065;
+var EMI_BASE   = 6453;
+var EMI_INC    = 0.04;
+var MORT_MO    = 150;
+var MORT_OUT   = 850280;
+var MORT_ORIG  = 860000;
+var MORT_PAID  = 3;
+var CAP_START  = 36700;
+var SETTLE_TOT = 45761;
+var RATES      = {opt:0.1515, mod:0.08, con:0.05};
 
+// ─── STATE ────────────────────────────────────────────────────────
+var S = {balances:[], tenant:[], mortgage:[], settlement:[]};
+try { var _s = localStorage.getItem('wt'); if(_s) S = JSON.parse(_s); } catch(e){}
+function save() { try { localStorage.setItem('wt', JSON.stringify(S)); } catch(e){} }
 
+// Prepopulate known mortgage payments
+(function() {
+  var known = [
+    {date:'2026-02-28', amount:6453, ref:'EMI-001', notes:'First payment — Feb 2026',  id:1},
+    {date:'2026-03-01', amount:6453, ref:'EMI-002', notes:'Second payment — Mar 2026', id:2},
+    {date:'2026-04-01', amount:6453, ref:'EMI-003', notes:'Third payment — Apr 2026',  id:3}
+  ];
+  known.forEach(function(k) {
+    if (!S.mortgage.find(function(p){ return p.id===k.id; })) S.mortgage.push(k);
+  });
+  S.mortgage.sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+  save();
+})();
+
+// ─── MATH HELPERS ─────────────────────────────────────────────────
+function emiAt(m) {
+  if (m > MORT_MO) return 0;
+  return Math.round(EMI_BASE * Math.pow(1+EMI_INC, Math.floor((m-1)/36)));
 }
-
-
-// NAV
-function showSection(id,btn) {
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
-  document.getElementById('sec-'+id).classList.add('active');
-  btn.classList.add('active');
-  if(id==='property') { buildPropChart(); buildEquityChart(); }
-  if(id==='mortgage') initMortgageTracker();
+function rentAt(yr) {
+  return Math.round(RENT_BASE * Math.pow(1+RENT_GROW, Math.max(0,yr-1)));
 }
-
-// MATH
-function emi(m) {
-  if(m>CONFIG.MORT_MONTHS) return 0;
-  return Math.round(CONFIG.EMI_BASE * Math.pow(1+CONFIG.EMI_INCREASE, Math.floor((m-1)/36)));
+function mbetween(d1,d2) {
+  return (d2.getFullYear()-d1.getFullYear())*12 + (d2.getMonth()-d1.getMonth());
 }
-function rent(yr) { return Math.round(CONFIG.RENT_BASE * Math.pow(1+CONFIG.RENT_GROWTH, Math.max(0,yr-1))); }
-function monthsBetween(d1,d2) { return (d2.getFullYear()-d1.getFullYear())*12+(d2.getMonth()-d1.getMonth()); }
-function fmtAED(v) {
-  if(v===null||v===undefined||isNaN(v)) return '—';
-  if(Math.abs(v)>=1e9) return (v/1e9).toFixed(2)+'B AED';
-  if(Math.abs(v)>=1e6) return (v/1e6).toFixed(2)+'M AED';
-  if(Math.abs(v)>=1e3) return Math.round(v/1e3).toLocaleString()+'K AED';
+function fa(v) {
+  if (v===null||v===undefined||isNaN(v)) return '—';
+  var a = Math.abs(v);
+  if (a>=1e9) return (v/1e9).toFixed(2)+'B AED';
+  if (a>=1e6) return (v/1e6).toFixed(2)+'M AED';
+  if (a>=1e3) return Math.round(v/1e3).toLocaleString()+'K AED';
   return Math.round(v).toLocaleString()+' AED';
 }
-function fmtN(v) { return Math.round(v).toLocaleString()+' AED'; }
-function fmtS(v) {
-  if(Math.abs(v)>=1e9) return (v/1e9).toFixed(1)+'B';
-  if(Math.abs(v)>=1e6) return (v/1e6).toFixed(2)+'M';
-  if(Math.abs(v)>=1e3) return Math.round(v/1e3)+'K';
+function fn(v) { return Math.round(v).toLocaleString()+' AED'; }
+function fs(v) {
+  var a=Math.abs(v);
+  if(a>=1e9) return (v/1e9).toFixed(1)+'B';
+  if(a>=1e6) return (v/1e6).toFixed(2)+'M';
+  if(a>=1e3) return Math.round(v/1e3)+'K';
   return Math.round(v)+'';
 }
 
-// SIMULATE
+// ─── SIMULATION ───────────────────────────────────────────────────
 function simulate(rate, yrs) {
-  const end = new Date(CONFIG.START_DATE.getFullYear()+yrs, CONFIG.START_DATE.getMonth(), CONFIG.START_DATE.getDate());
-  let cap = CONFIG.START_CAPITAL, cur = new Date(CONFIG.START_DATE);
-  const dr = Math.pow(1+rate,1/30)-1;
-  let mc=0, lm=-1;
-  const pts = [{date:new Date(cur), value:cap}];
-  const td=[];
-  let qd=new Date(2026,5,18);
+  var end = new Date(START.getFullYear()+yrs, START.getMonth(), START.getDate());
+  var cap = CAP_START;
+  var cur = new Date(START);
+  var dr = Math.pow(1+rate,1/30)-1;
+  var mc=0, lm=-1;
+  var pts = [{date:new Date(cur), v:cap}];
+
+  var td=[], qd=new Date(2026,5,18);
   while(qd<=end) {
-    const yr=Math.max(1,Math.ceil((qd-CONFIG.START_DATE)/(365.25*24*3600*1000)));
-    td.push({date:new Date(qd),amount:rent(yr)});
+    var yr=Math.max(1,Math.ceil((qd-START)/(365.25*24*3600*1000)));
+    td.push({date:new Date(qd), amt:rentAt(yr)});
     qd=new Date(qd); qd.setMonth(qd.getMonth()+3);
   }
-  let ti=0;
+
+  var ti=0;
   while(cur<=end) {
     cap*=(1+dr);
-    const cm=cur.getFullYear()*12+cur.getMonth();
-    if(cm!==lm){lm=cm;mc++;cap=Math.max(0,cap-emi(mc));}
-    if(ti<td.length&&cur>=td[ti].date){cap+=td[ti].amount;ti++;}
-    const nx=new Date(cur);nx.setDate(nx.getDate()+1);
-    if(nx.getDate()===1) pts.push({date:new Date(nx),value:Math.round(cap)});
+    var cm=cur.getFullYear()*12+cur.getMonth();
+    if(cm!==lm){ lm=cm; mc++; cap=Math.max(0,cap-emiAt(mc)); }
+    if(ti<td.length&&cur>=td[ti].date){ cap+=td[ti].amt; ti++; }
+    var nx=new Date(cur); nx.setDate(nx.getDate()+1);
+    if(nx.getDate()===1) pts.push({date:new Date(nx),v:Math.round(cap)});
     cur=nx;
   }
-  pts.push({date:new Date(end),value:Math.round(cap)});
+  pts.push({date:new Date(end),v:Math.round(cap)});
   return pts;
 }
 
-function getVal(pts,d) {
-  let c=pts[0],md=Math.abs(pts[0].date-d);
-  for(const p of pts){const diff=Math.abs(p.date-d);if(diff<md){md=diff;c=p;}}
-  return c.value;
+function valAt(pts,d) {
+  var c=pts[0], md=Math.abs(pts[0].date-d);
+  for(var i=0;i<pts.length;i++){ var diff=Math.abs(pts[i].date-d); if(diff<md){md=diff;c=pts[i];} }
+  return c.v;
 }
 
-let P = { opt: null, mod: null, con: null };
-function buildProjections() {
-  if (!P.opt) {
-    P.opt = simulate(CONFIG.RATES.opt,15);
-    P.mod = simulate(CONFIG.RATES.mod,15);
-    P.con = simulate(CONFIG.RATES.con,15);
-  }
+// Build projections once after page load
+var P = {opt:null,mod:null,con:null};
+function buildP() {
+  P.opt=simulate(RATES.opt,15);
+  P.mod=simulate(RATES.mod,15);
+  P.con=simulate(RATES.con,15);
 }
 
-const charts={};
-function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+// ─── CHARTS ───────────────────────────────────────────────────────
+var CH = {};
+function dc(id){ if(CH[id]){ CH[id].destroy(); delete CH[id]; } }
 
-// DASHBOARD
-function initDashboard() {
-  const now=new Date();
-  document.getElementById('headerDate').textContent=now.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-  const days=Math.floor((now-CONFIG.START_DATE)/(24*3600*1000));
-  document.getElementById('dbDays').textContent=days.toLocaleString();
+// ─── NAV ──────────────────────────────────────────────────────────
+function go(id,btn) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('on'); });
+  document.querySelectorAll('.tab').forEach(function(b){ b.classList.remove('on'); });
+  document.getElementById('pg-'+id).classList.add('on');
+  btn.classList.add('on');
+  if(id==='projections') buildProjChart();
+  if(id==='mortgage')    buildMortChart();
+  if(id==='property')    { buildPropChart(); buildEquityChart(); }
+}
 
-  const aptM=monthsBetween(CONFIG.START_DATE,now);
-  const yr=Math.max(1,Math.ceil(aptM/12));
-  const rentNow=rent(yr);
-  const emiNow=emi(Math.max(1,aptM));
-  const surplus=rentNow-(emiNow*3);
+// ─── DASHBOARD ────────────────────────────────────────────────────
+function initDash() {
+  var now = new Date();
+  document.getElementById('hDate').textContent = now.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('dbDays').textContent = Math.floor((now-START)/(24*3600*1000)).toLocaleString();
 
-  document.getElementById('dbRent').textContent=fmtN(rentNow);
-  document.getElementById('dbRentSub').textContent='Year '+yr+' — +6.5%/yr';
-  document.getElementById('dbEMI').textContent=fmtN(emiNow);
-  document.getElementById('dbSurplus').textContent=(surplus>=0?'+':'')+fmtN(surplus);
-  document.getElementById('dbSurplus').style.color=surplus>=0?'var(--teal)':'var(--red)';
+  var mo = mbetween(START,now);
+  var yr = Math.max(1,Math.ceil(mo/12));
+  var r  = rentAt(yr);
+  var e  = emiAt(Math.max(1,mo));
+  var surplus = r-(e*3);
 
-  const extra=Math.max(0,aptM-CONFIG.MORT_PAYMENTS_MADE);
-  const mortNow=Math.max(0,CONFIG.MORT_OUTSTANDING-Math.round(CONFIG.EMI_BASE*0.55*extra));
-  const pct=((CONFIG.MORT_ORIGINAL-mortNow)/CONFIG.MORT_ORIGINAL*100).toFixed(2);
-  document.getElementById('dbMortRemain').textContent=fmtAED(mortNow);
-  document.getElementById('dbMortOut').textContent=fmtAED(mortNow);
-  document.getElementById('dbMortPct').textContent=pct+'% paid to date';
-  document.getElementById('dbPaysMade').textContent=state.mortgagePayments.length||CONFIG.MORT_PAYMENTS_MADE;
+  document.getElementById('dbRent').textContent    = fn(r);
+  document.getElementById('dbSurplus').textContent = (surplus>=0?'+':'')+fn(surplus);
+  document.getElementById('dbSurplus').style.color = surplus>=0?'var(--teal)':'var(--red)';
+  document.getElementById('dbNextCheque').textContent = fn(r);
 
-  const nextRent=rent(yr);
-  document.getElementById('dbNextCheque').textContent=fmtN(nextRent);
+  var extra = Math.max(0,mbetween(MORT_START,now)-MORT_PAID);
+  var mortNow = Math.max(0,MORT_OUT-Math.round(EMI_BASE*0.55*extra));
+  var pct = ((MORT_ORIG-mortNow)/MORT_ORIG*100).toFixed(2);
+  document.getElementById('dbMortRem').textContent = fa(mortNow);
+  document.getElementById('dbMortPct').textContent = pct+'% paid';
+  document.getElementById('nwMort').textContent    = fa(mortNow);
 
-  const projMod=getVal(P.mod,now);
-  document.getElementById('dbProjMod').textContent=fmtAED(projMod);
+  var stPaid = S.settlement.reduce(function(a,p){ return a+p.amount; },0);
+  var stRem  = Math.max(0,SETTLE_TOT-stPaid);
+  document.getElementById('dbSettlement').textContent = fn(stRem);
+  document.getElementById('dbSettlement').style.color = stRem===0?'var(--teal)':'var(--red)';
 
-  if(state.actualBalances.length) {
-    const lat=state.actualBalances[state.actualBalances.length-1];
-    document.getElementById('dbActual').textContent=fmtN(lat.balance);
-    document.getElementById('dbActualDate').textContent='As of '+new Date(lat.month+'-01').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-    document.getElementById('dbPortfolio').textContent=fmtAED(lat.balance);
-    document.getElementById('netWorthVal').textContent=fmtAED(lat.balance+1075000-mortNow);
+  var projMod = valAt(P.mod,now);
+  document.getElementById('dbProjMod').textContent = fa(projMod);
+
+  if(S.balances.length) {
+    var lat = S.balances[S.balances.length-1];
+    document.getElementById('dbActual').textContent     = fn(lat.balance);
+    document.getElementById('dbActualDate').textContent = new Date(lat.month+'-01').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+    document.getElementById('nwPortfolio').textContent  = fa(lat.balance);
+    document.getElementById('nwVal').textContent        = fa(lat.balance+1075000-mortNow);
   } else {
-    document.getElementById('dbPortfolio').textContent=fmtAED(projMod);
-    document.getElementById('netWorthVal').textContent=fmtAED(projMod+1075000-mortNow);
+    document.getElementById('nwPortfolio').textContent = fa(projMod);
+    document.getElementById('nwVal').textContent       = fa(projMod+1075000-mortNow);
   }
   buildDashChart();
 }
 
 function buildDashChart() {
-  dc('dash');
-  const endD=new Date(); endD.setFullYear(endD.getFullYear()+3);
-  const pts=P.mod.filter(p=>p.date<=endD);
-  const step=Math.max(1,Math.floor(pts.length/60));
-  const lbl=pts.filter((_,i)=>i%step===0).map(p=>p.date.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}));
-  const smp=k=>P[k].filter(p=>p.date<=endD).filter((_,i)=>i%step===0).map(p=>Math.round(p.value));
-  const act=pts.filter((_,i)=>i%step===0).map(p=>{
-    const m=state.actualBalances.find(b=>{const bd=new Date(b.month+'-01');return bd.getFullYear()===p.date.getFullYear()&&bd.getMonth()===p.date.getMonth();});
+  dc('dashChart');
+  var end=new Date(); end.setFullYear(end.getFullYear()+3);
+  var pts=P.mod.filter(function(p){ return p.date<=end; });
+  var step=Math.max(1,Math.floor(pts.length/60));
+  var lbl=pts.filter(function(_,i){ return i%step===0; }).map(function(p){ return p.date.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}); });
+  var smp=function(k){ return P[k].filter(function(p){ return p.date<=end; }).filter(function(_,i){ return i%step===0; }).map(function(p){ return p.v; }); };
+  var act=pts.filter(function(_,i){ return i%step===0; }).map(function(p){
+    var m=S.balances.find(function(b){ var bd=new Date(b.month+'-01'); return bd.getFullYear()===p.date.getFullYear()&&bd.getMonth()===p.date.getMonth(); });
     return m?m.balance:null;
   });
-  charts['dash']=new Chart(document.getElementById('dashChart'),{
-    type:'line',data:{labels:lbl,datasets:[
+  CH['dashChart']=new Chart(document.getElementById('dashChart'),{
+    type:'line',
+    data:{labels:lbl,datasets:[
       {label:'Optimistic',data:smp('opt'),borderColor:'#1D9E75',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false},
-      {label:'Moderate',data:smp('mod'),borderColor:'#378ADD',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[5,3]},
+      {label:'Moderate',  data:smp('mod'),borderColor:'#378ADD',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[5,3]},
       {label:'Conservative',data:smp('con'),borderColor:'#BA7517',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[2,4]},
-      {label:'Actual',data:act,borderColor:'#b8922e',backgroundColor:'#b8922e',borderWidth:2.5,pointRadius:4,tension:0.3,fill:false,spanGaps:false},
+      {label:'Actual',    data:act,borderColor:'#b8922e',backgroundColor:'#b8922e',borderWidth:2.5,pointRadius:4,tension:0.3,fill:false,spanGaps:false}
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtS(c.raw)+' AED'}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){ return ' '+c.dataset.label+': '+fs(c.raw)+' AED'; }}}},
       scales:{x:{ticks:{autoSkip:true,maxRotation:45,font:{size:10},color:'#888'},grid:{display:false}},
-              y:{ticks:{font:{size:10},color:'#888',callback:v=>fmtS(v)},grid:{color:'rgba(0,0,0,0.05)'}}}}
+              y:{ticks:{font:{size:10},color:'#888',callback:function(v){ return fs(v); }},grid:{color:'rgba(0,0,0,0.05)'}}}}
   });
 }
 
-// PROJECTIONS
-const sOn={opt:true,mod:true,con:true};
-function toggleScenario(s){
+// ─── PROJECTIONS ──────────────────────────────────────────────────
+var sOn={opt:true,mod:true,con:true};
+function togScenario(s) {
   sOn[s]=!sOn[s];
   document.getElementById('tog-'+s).classList.toggle('on',sOn[s]);
-  buildProjectionChart();
+  buildProjChart();
 }
-function buildProjectionChart() {
-  dc('proj');
-  const yrs=parseInt(document.getElementById('projYears').value);
-  const end=new Date(CONFIG.START_DATE.getFullYear()+yrs,CONFIG.START_DATE.getMonth(),CONFIG.START_DATE.getDate());
-  const f=k=>P[k].filter(p=>p.date<=end);
-  const step=Math.max(1,Math.floor(f('mod').length/60));
-  const lbl=f('mod').filter((_,i)=>i%step===0).map(p=>p.date.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}));
-  const smp=k=>f(k).filter((_,i)=>i%step===0).map(p=>Math.round(p.value));
-  const ds=[];
-  if(sOn.opt) ds.push({label:'Optimistic',data:smp('opt'),borderColor:'#1D9E75',borderWidth:2,pointRadius:0,tension:0.3,fill:false});
-  if(sOn.mod) ds.push({label:'Moderate',data:smp('mod'),borderColor:'#378ADD',borderWidth:2,pointRadius:0,tension:0.3,fill:false,borderDash:[6,3]});
+function buildProjChart() {
+  dc('projChart');
+  var yrs=parseInt(document.getElementById('projYrs').value);
+  var end=new Date(START.getFullYear()+yrs,START.getMonth(),START.getDate());
+  var pts=P.mod.filter(function(p){ return p.date<=end; });
+  var step=Math.max(1,Math.floor(pts.length/60));
+  var lbl=pts.filter(function(_,i){ return i%step===0; }).map(function(p){ return p.date.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}); });
+  var smp=function(k){ return P[k].filter(function(p){ return p.date<=end; }).filter(function(_,i){ return i%step===0; }).map(function(p){ return p.v; }); };
+  var ds=[];
+  if(sOn.opt) ds.push({label:'Optimistic',  data:smp('opt'),borderColor:'#1D9E75',borderWidth:2,pointRadius:0,tension:0.3,fill:false});
+  if(sOn.mod) ds.push({label:'Moderate',    data:smp('mod'),borderColor:'#378ADD',borderWidth:2,pointRadius:0,tension:0.3,fill:false,borderDash:[6,3]});
   if(sOn.con) ds.push({label:'Conservative',data:smp('con'),borderColor:'#BA7517',borderWidth:2,pointRadius:0,tension:0.3,fill:false,borderDash:[2,4]});
-  charts['proj']=new Chart(document.getElementById('projChart'),{
+  CH['projChart']=new Chart(document.getElementById('projChart'),{
     type:'line',data:{labels:lbl,datasets:ds},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtS(c.raw)+' AED'}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){ return ' '+c.dataset.label+': '+fs(c.raw)+' AED'; }}}},
       scales:{x:{ticks:{autoSkip:true,maxRotation:45,font:{size:10},color:'#888'},grid:{display:false}},
-              y:{ticks:{font:{size:10},color:'#888',callback:v=>fmtS(v)+' AED'},grid:{color:'rgba(0,0,0,0.05)'}}}}
+              y:{ticks:{font:{size:10},color:'#888',callback:function(v){ return fs(v)+' AED'; }},grid:{color:'rgba(0,0,0,0.05)'}}}}
   });
   buildProjTable(yrs);
 }
 function buildProjTable(yrs) {
-  const tb=document.getElementById('projTableBody'); tb.innerHTML='';
-  for(let y=0;y<=Math.min(yrs,15);y++) {
-    const d=new Date(CONFIG.START_DATE.getFullYear()+y,CONFIG.START_DATE.getMonth(),CONFIG.START_DATE.getDate());
-    const r=rent(Math.max(1,y)), e=emi(Math.max(1,y*12));
-    const row=document.createElement('tr');
-    if([0,3,5,10,15].includes(y)) row.className='bold-row';
-    row.innerHTML=`<td>Year ${y} — ${d.toLocaleDateString('en-GB',{month:'short',year:'numeric'})}</td><td>${r.toLocaleString()} AED</td><td style="color:var(--red)">${e.toLocaleString()} AED</td><td style="color:var(--teal)">${fmtAED(getVal(P.opt,d))}</td><td style="color:var(--blue)">${fmtAED(getVal(P.mod,d))}</td><td style="color:var(--amber)">${fmtAED(getVal(P.con,d))}</td>`;
+  var tb=document.getElementById('projTbody'); tb.innerHTML='';
+  for(var y=0;y<=Math.min(yrs,15);y++) {
+    var d=new Date(START.getFullYear()+y,START.getMonth(),START.getDate());
+    var r=rentAt(Math.max(1,y)), e=emiAt(Math.max(1,y*12));
+    var row=document.createElement('tr');
+    if([0,3,5,10,15].indexOf(y)>=0) row.className='brow';
+    row.innerHTML='<td>Year '+y+' — '+d.toLocaleDateString('en-GB',{month:'short',year:'numeric'})+'</td>'
+      +'<td>'+r.toLocaleString()+' AED</td>'
+      +'<td style="color:var(--red)">'+e.toLocaleString()+' AED</td>'
+      +'<td style="color:var(--teal)">'+fa(valAt(P.opt,d))+'</td>'
+      +'<td style="color:var(--blue)">'+fa(valAt(P.mod,d))+'</td>'
+      +'<td style="color:var(--amber)">'+fa(valAt(P.con,d))+'</td>';
     tb.appendChild(row);
   }
 }
 
-// ACTUAL VS PROJECTED
-function saveActualBalance() {
-  const month=document.getElementById('avpMonth').value;
-  const balance=parseFloat(document.getElementById('avpBalance').value);
-  const notes=document.getElementById('avpNotes').value;
-  if(!month||!balance){showStatus('avpStatus','Please fill in month and balance.','error');return;}
-  const idx=state.actualBalances.findIndex(b=>b.month===month);
-  if(idx>=0) state.actualBalances[idx]={month,balance,notes};
-  else state.actualBalances.push({month,balance,notes});
-  state.actualBalances.sort((a,b)=>a.month.localeCompare(b.month));
-  saveState(); showStatus('avpStatus','Balance saved.','success');
-  document.getElementById('avpMonth').value='';document.getElementById('avpBalance').value='';document.getElementById('avpNotes').value='';
-  refreshAVP(); syncToSheet('actual_balance',{month,balance,notes});
+// ─── ACTUAL VS PROJECTED ──────────────────────────────────────────
+function saveAVP() {
+  var month=document.getElementById('avpMonth').value;
+  var bal=parseFloat(document.getElementById('avpBal').value);
+  var notes=document.getElementById('avpNotes').value;
+  if(!month||!bal){ showMsg('avpMsg','Please fill in month and balance.','err'); return; }
+  var idx=S.balances.findIndex(function(b){ return b.month===month; });
+  if(idx>=0) S.balances[idx]={month:month,balance:bal,notes:notes};
+  else S.balances.push({month:month,balance:bal,notes:notes});
+  S.balances.sort(function(a,b){ return a.month<b.month?-1:1; });
+  save(); showMsg('avpMsg','Balance saved.','ok');
+  document.getElementById('avpMonth').value='';
+  document.getElementById('avpBal').value='';
+  document.getElementById('avpNotes').value='';
+  refreshAVP(); sync('actual_balance',{month:month,balance:bal,notes:notes});
 }
 function refreshAVP() {
-  if(!state.actualBalances.length) return;
-  const lat=state.actualBalances[state.actualBalances.length-1];
-  const ld=new Date(lat.month+'-01');
-  document.getElementById('avpLatest').textContent=fmtN(lat.balance);
+  if(!S.balances.length) return;
+  var lat=S.balances[S.balances.length-1];
+  var ld=new Date(lat.month+'-01');
+  document.getElementById('avpLatest').textContent=fn(lat.balance);
   document.getElementById('avpLatestDate').textContent=ld.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-  const sc=(ve,pe,proj)=>{const d=lat.balance-proj,p=((d/proj)*100).toFixed(1);document.getElementById(ve).textContent=(d>=0?'+':'')+fmtN(d);document.getElementById(ve).style.color=d>=0?'var(--teal)':'var(--red)';document.getElementById(pe).textContent=(d>=0?'+':'')+p+'% vs projection';};
-  sc('avpVsMod','avpVsModPct',getVal(P.mod,ld));sc('avpVsOpt','avpVsOptPct',getVal(P.opt,ld));sc('avpVsCon','avpVsConPct',getVal(P.con,ld));
+  function sc(vi,pi,proj) {
+    var d=lat.balance-proj, p=((d/proj)*100).toFixed(1);
+    document.getElementById(vi).textContent=(d>=0?'+':'')+fn(d);
+    document.getElementById(vi).style.color=d>=0?'var(--teal)':'var(--red)';
+    document.getElementById(pi).textContent=(d>=0?'+':'')+p+'%';
+  }
+  sc('avpVsMod','avpVsModPct',valAt(P.mod,ld));
+  sc('avpVsOpt','avpVsOptPct',valAt(P.opt,ld));
+  sc('avpVsCon','avpVsConPct',valAt(P.con,ld));
   buildAVPChart(); buildAVPTable();
 }
 function buildAVPChart() {
-  dc('avp');
-  const ed=new Date();ed.setMonth(ed.getMonth()+6);
-  const pts=P.mod.filter(p=>p.date<=ed);
-  const step=Math.max(1,Math.floor(pts.length/60));
-  const lbl=pts.filter((_,i)=>i%step===0).map(p=>p.date.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}));
-  const smp=k=>P[k].filter(p=>p.date<=ed).filter((_,i)=>i%step===0).map(p=>Math.round(p.value));
-  const act=pts.filter((_,i)=>i%step===0).map(p=>{const m=state.actualBalances.find(b=>{const bd=new Date(b.month+'-01');return bd.getFullYear()===p.date.getFullYear()&&bd.getMonth()===p.date.getMonth();});return m?m.balance:null;});
-  charts['avp']=new Chart(document.getElementById('avpChart'),{
-    type:'line',data:{labels:lbl,datasets:[
-      {label:'Optimistic',data:smp('opt'),borderColor:'#1D9E75',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false},
-      {label:'Moderate',data:smp('mod'),borderColor:'#378ADD',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[5,3]},
+  dc('avpChart');
+  var end=new Date(); end.setMonth(end.getMonth()+6);
+  var pts=P.mod.filter(function(p){ return p.date<=end; });
+  var step=Math.max(1,Math.floor(pts.length/60));
+  var lbl=pts.filter(function(_,i){ return i%step===0; }).map(function(p){ return p.date.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}); });
+  var smp=function(k){ return P[k].filter(function(p){ return p.date<=end; }).filter(function(_,i){ return i%step===0; }).map(function(p){ return p.v; }); };
+  var act=pts.filter(function(_,i){ return i%step===0; }).map(function(p){
+    var m=S.balances.find(function(b){ var bd=new Date(b.month+'-01'); return bd.getFullYear()===p.date.getFullYear()&&bd.getMonth()===p.date.getMonth(); });
+    return m?m.balance:null;
+  });
+  CH['avpChart']=new Chart(document.getElementById('avpChart'),{
+    type:'line',
+    data:{labels:lbl,datasets:[
+      {label:'Optimistic',  data:smp('opt'),borderColor:'#1D9E75',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false},
+      {label:'Moderate',    data:smp('mod'),borderColor:'#378ADD',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[5,3]},
       {label:'Conservative',data:smp('con'),borderColor:'#BA7517',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,borderDash:[2,4]},
-      {label:'Actual',data:act,borderColor:'#b8922e',backgroundColor:'#b8922e',borderWidth:2.5,pointRadius:5,tension:0.3,fill:false,spanGaps:false},
+      {label:'Actual',      data:act,borderColor:'#b8922e',backgroundColor:'#b8922e',borderWidth:2.5,pointRadius:5,tension:0.3,fill:false,spanGaps:false}
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtS(c.raw)+' AED'}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){ return ' '+c.dataset.label+': '+fs(c.raw)+' AED'; }}}},
       scales:{x:{ticks:{autoSkip:true,maxRotation:45,font:{size:10},color:'#888'},grid:{display:false}},
-              y:{ticks:{font:{size:10},color:'#888',callback:v=>fmtS(v)},grid:{color:'rgba(0,0,0,0.05)'}}}}
+              y:{ticks:{font:{size:10},color:'#888',callback:function(v){ return fs(v); }},grid:{color:'rgba(0,0,0,0.05)'}}}}
   });
 }
 function buildAVPTable() {
-  const tb=document.getElementById('avpTableBody');tb.innerHTML='';
-  if(!state.actualBalances.length){tb.innerHTML='<tr><td colspan="5" class="loading">No balances logged yet.</td></tr>';return;}
-  [...state.actualBalances].reverse().forEach(b=>{
-    const bd=new Date(b.month+'-01'),proj=getVal(P.mod,bd),diff=b.balance-proj;
-    const row=document.createElement('tr');
-    row.innerHTML=`<td>${bd.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</td><td><strong>${fmtN(b.balance)}</strong></td><td style="color:var(--blue)">${fmtN(proj)}</td><td><span class="badge ${diff>=0?'badge-green':'badge-red'}">${diff>=0?'+':''}${fmtN(diff)}</span></td><td style="color:var(--ink-faint)">${b.notes||'—'}</td>`;
+  var tb=document.getElementById('avpTbody'); tb.innerHTML='';
+  if(!S.balances.length){ tb.innerHTML='<tr><td colspan="5" class="empty">No balances logged.</td></tr>'; return; }
+  S.balances.slice().reverse().forEach(function(b) {
+    var bd=new Date(b.month+'-01'), proj=valAt(P.mod,bd), diff=b.balance-proj;
+    var row=document.createElement('tr');
+    row.innerHTML='<td>'+bd.toLocaleDateString('en-GB',{month:'long',year:'numeric'})+'</td>'
+      +'<td><strong>'+fn(b.balance)+'</strong></td>'
+      +'<td style="color:var(--blue)">'+fn(proj)+'</td>'
+      +'<td><span class="badge '+(diff>=0?'bg-g':'bg-r')+'">'+(diff>=0?'+':'')+fn(diff)+'</span></td>'
+      +'<td style="color:var(--ink-faint)">'+(b.notes||'—')+'</td>';
     tb.appendChild(row);
   });
 }
 
-// MORTGAGE TRACKER
-function initMortgageTracker() {
-  const now=new Date();
-  const m=monthsBetween(CONFIG.MORT_START,now);
-  const emiNow=emi(Math.max(1,m));
-  const extra=Math.max(0,m-CONFIG.MORT_PAYMENTS_MADE);
-  const bal=Math.max(0,CONFIG.MORT_OUTSTANDING-Math.round(CONFIG.EMI_BASE*0.55*extra));
-  const pct=((CONFIG.MORT_ORIGINAL-bal)/CONFIG.MORT_ORIGINAL*100).toFixed(2);
-  document.getElementById('mtEMI').textContent=fmtN(emiNow);
-  document.getElementById('mtRemaining').textContent=fmtAED(bal);
-  document.getElementById('mtPaidPct').innerHTML=`<div class="progress-wrap"><div class="progress-bar" style="width:${Math.min(100,pct)}%;background:var(--teal)"></div></div>${pct}% of original loan paid`;
-  document.getElementById('mtPaysMade').textContent=state.mortgagePayments.length||CONFIG.MORT_PAYMENTS_MADE;
-  buildMortChart();
-  buildMortSchedule();
-}
+// ─── MORTGAGE TRACKER ─────────────────────────────────────────────
 function buildMortChart() {
-  dc('mort');
-  const lbl=[],bal=[],eq=[];
-  for(let m=0;m<=CONFIG.MORT_MONTHS;m+=3) {
-    const d=new Date(CONFIG.MORT_START);d.setMonth(d.getMonth()+m);
+  dc('mortChart');
+  var lbl=[],bal=[],eq=[];
+  for(var m=0;m<=MORT_MO;m+=3) {
+    var d=new Date(MORT_START); d.setMonth(d.getMonth()+m);
     lbl.push(d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}));
-    const b=Math.max(0,Math.round(CONFIG.MORT_OUTSTANDING-(CONFIG.EMI_BASE*0.55*m)));
+    var b=Math.max(0,Math.round(MORT_OUT-(EMI_BASE*0.55*m)));
     bal.push(b); eq.push(1075000-b);
   }
-  charts['mort']=new Chart(document.getElementById('mortChart'),{
-    type:'line',data:{labels:lbl,datasets:[
-      {label:'Outstanding',data:bal,borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.06)',borderWidth:2,pointRadius:0,tension:0.3,fill:true},
-      {label:'Equity',data:eq,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.06)',borderWidth:2,pointRadius:0,tension:0.3,fill:true},
+  CH['mortChart']=new Chart(document.getElementById('mortChart'),{
+    type:'line',
+    data:{labels:lbl,datasets:[
+      {label:'Equity',     data:eq, borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.07)',borderWidth:2,pointRadius:0,tension:0.3,fill:true},
+      {label:'Outstanding',data:bal,borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.05)', borderWidth:2,pointRadius:0,tension:0.3,fill:true}
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtS(c.raw)+' AED'}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){ return ' '+c.dataset.label+': '+fs(c.raw)+' AED'; }}}},
       scales:{x:{ticks:{autoSkip:true,maxRotation:45,font:{size:10},color:'#888'},grid:{display:false}},
-              y:{ticks:{font:{size:10},color:'#888',callback:v=>fmtS(v)+' AED'},grid:{color:'rgba(0,0,0,0.05)'}}}}
+              y:{ticks:{font:{size:10},color:'#888',callback:function(v){ return fs(v)+' AED'; }},grid:{color:'rgba(0,0,0,0.05)'}}}}
   });
+  buildMortSched();
+  var now=new Date();
+  var mo=mbetween(MORT_START,now);
+  var extra=Math.max(0,mo-MORT_PAID);
+  var bal2=Math.max(0,MORT_OUT-Math.round(EMI_BASE*0.55*extra));
+  var pct=((MORT_ORIG-bal2)/MORT_ORIG*100).toFixed(2);
+  document.getElementById('mtBal').textContent=fa(bal2);
+  document.getElementById('mtPct').innerHTML='<div class="prog-wrap"><div class="prog-bar" style="width:'+Math.min(100,pct)+'%"></div></div>'+pct+'% paid';
+  document.getElementById('mtPays').textContent=S.mortgage.length||MORT_PAID;
 }
-function buildMortSchedule() {
-  const tb=document.getElementById('mortScheduleBody');tb.innerHTML='';
-  [{from:'28 Feb 2026',to:'Mar 2029',e:6453,s:'Active — current rate'},
-   {from:'Apr 2029',to:'Mar 2032',e:6711,s:'Upcoming +4%'},
-   {from:'Apr 2032',to:'Mar 2035',e:6979,s:'Future +4%'},
-   {from:'Apr 2035',to:'Mar 2038',e:7258,s:'Future +4%'},
-   {from:'Apr 2038',to:'~Feb 2039',e:7548,s:'Final period +4%'}].forEach((p,i)=>{
-    const row=document.createElement('tr');
-    row.innerHTML=`<td>Period ${i+1}</td><td>${p.from}</td><td>${p.to}</td><td style="color:var(--red);font-weight:500;">${p.e.toLocaleString()} AED</td><td><span class="badge ${i===0?'badge-green':'badge-blue'}">${p.s}</span></td>`;
+function buildMortSched() {
+  var tb=document.getElementById('mortSched'); tb.innerHTML='';
+  [{f:'28 Feb 2026',t:'Mar 2029',e:6453,s:'Active'},{f:'Apr 2029',t:'Mar 2032',e:6711,s:'Upcoming'},{f:'Apr 2032',t:'Mar 2035',e:6979,s:'Future'},{f:'Apr 2035',t:'Mar 2038',e:7258,s:'Future'},{f:'Apr 2038',t:'~Feb 2039',e:7548,s:'Final'}].forEach(function(p,i) {
+    var row=document.createElement('tr');
+    row.innerHTML='<td>Period '+(i+1)+'</td><td>'+p.f+'</td><td>'+p.t+'</td>'
+      +'<td style="color:var(--red);font-weight:500">'+p.e.toLocaleString()+' AED</td>'
+      +'<td><span class="badge '+(i===0?'bg-g':'bg-b')+'">'+p.s+'</span></td>';
     tb.appendChild(row);
   });
 }
 
-// PROPERTY CHARTS
+// ─── PROPERTY CHARTS ──────────────────────────────────────────────
 function buildPropChart() {
-  dc('prop');
-  const lbl=[],r=[],e=[];
-  for(let y=1;y<=15;y++){lbl.push('Yr '+y);r.push(Math.round(rent(y)/3));e.push(emi(y*12));}
-  charts['prop']=new Chart(document.getElementById('propChart'),{
-    type:'bar',data:{labels:lbl,datasets:[
+  dc('propChart');
+  var lbl=[],r=[],e=[];
+  for(var y=1;y<=15;y++){ lbl.push('Yr '+y); r.push(Math.round(rentAt(y)/3)); e.push(emiAt(y*12)); }
+  CH['propChart']=new Chart(document.getElementById('propChart'),{
+    type:'bar',
+    data:{labels:lbl,datasets:[
       {label:'Monthly rent equiv.',data:r,backgroundColor:'rgba(184,146,46,0.75)',borderRadius:4},
-      {label:'Monthly EMI',data:e,backgroundColor:'rgba(226,75,74,0.75)',borderRadius:4},
+      {label:'Monthly EMI',       data:e,backgroundColor:'rgba(226,75,74,0.75)', borderRadius:4}
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.raw.toLocaleString()+' AED'}}},
-      scales:{x:{ticks:{font:{size:10},color:'#888'},grid:{display:false}},y:{ticks:{font:{size:10},color:'#888',callback:v=>v.toLocaleString()},grid:{color:'rgba(0,0,0,0.05)'}}}}
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){ return ' '+c.dataset.label+': '+c.raw.toLocaleString()+' AED'; }}}},
+      scales:{x:{ticks:{font:{size:10},color:'#888'},grid:{display:false}},
+              y:{ticks:{font:{size:10},color:'#888',callback:function(v){ return v.toLocaleString(); }},grid:{color:'rgba(0,0,0,0.05)'}}}}
   });
 }
 function buildEquityChart() {
-  dc('equity');
-  const lbl=[],eq=[],bal=[];
-  for(let m=0;m<=180;m+=6){
-    const d=new Date(CONFIG.MORT_START);d.setMonth(d.getMonth()+m);
+  dc('equityChart');
+  var lbl=[],eq=[],bal=[];
+  for(var m=0;m<=180;m+=6) {
+    var d=new Date(MORT_START); d.setMonth(d.getMonth()+m);
     lbl.push(d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}));
-    const b=Math.max(0,CONFIG.MORT_OUTSTANDING-(CONFIG.EMI_BASE*0.55*m));
-    bal.push(Math.round(b));eq.push(Math.round(1075000-b));
+    var b=Math.max(0,MORT_OUT-(EMI_BASE*0.55*m));
+    bal.push(Math.round(b)); eq.push(Math.round(1075000-b));
   }
-  charts['equity']=new Chart(document.getElementById('equityChart'),{
-    type:'line',data:{labels:lbl,datasets:[
-      {label:'Equity',data:eq,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',borderWidth:2,pointRadius:0,tension:0.3,fill:true},
-      {label:'Outstanding',data:bal,borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.05)',borderWidth:2,pointRadius:0,tension:0.3,fill:true},
+  CH['equityChart']=new Chart(document.getElementById('equityChart'),{
+    type:'line',
+    data:{labels:lbl,datasets:[
+      {label:'Equity',     data:eq, borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',borderWidth:2,pointRadius:0,tension:0.3,fill:true},
+      {label:'Outstanding',data:bal,borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.05)', borderWidth:2,pointRadius:0,tension:0.3,fill:true}
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtS(c.raw)+' AED'}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){ return ' '+c.dataset.label+': '+fs(c.raw)+' AED'; }}}},
       scales:{x:{ticks:{autoSkip:true,maxRotation:45,font:{size:10},color:'#888'},grid:{display:false}},
-              y:{ticks:{font:{size:10},color:'#888',callback:v=>fmtS(v)+' AED'},grid:{color:'rgba(0,0,0,0.05)'}}}}
+              y:{ticks:{font:{size:10},color:'#888',callback:function(v){ return fs(v)+' AED'; }},grid:{color:'rgba(0,0,0,0.05)'}}}}
   });
 }
 
-// TENANT LOG
-function saveTenantIncome() {
-  const date=document.getElementById('ti-date').value,amount=parseFloat(document.getElementById('ti-amount').value),ref=document.getElementById('ti-ref').value,notes=document.getElementById('ti-notes').value;
-  if(!date||!amount){showStatus('tiStatus','Please fill in date and amount.','error');return;}
-  state.tenantIncome.push({date,amount,ref,notes,id:Date.now()});
-  state.tenantIncome.sort((a,b)=>a.date.localeCompare(b.date));
-  saveState();showStatus('tiStatus','Tenant income saved.','success');
-  ['ti-date','ti-amount','ti-ref','ti-notes'].forEach(id=>document.getElementById(id).value='');
-  refreshTenantLog();syncToSheet('tenant_income',{date,amount,ref,notes});
+// ─── TENANT LOG ───────────────────────────────────────────────────
+function saveTI() {
+  var date=document.getElementById('tiDate').value, amt=parseFloat(document.getElementById('tiAmt').value);
+  var ref=document.getElementById('tiRef').value, notes=document.getElementById('tiNotes').value;
+  if(!date||!amt){ showMsg('tiMsg','Please fill in date and amount.','err'); return; }
+  S.tenant.push({date:date,amount:amt,ref:ref,notes:notes,id:Date.now()});
+  S.tenant.sort(function(a,b){ return a.date<b.date?-1:1; });
+  save(); showMsg('tiMsg','Saved.','ok');
+  ['tiDate','tiAmt','tiRef','tiNotes'].forEach(function(id){ document.getElementById(id).value=''; });
+  refreshTI(); sync('tenant_income',{date:date,amount:amt,ref:ref,notes:notes});
 }
-function refreshTenantLog() {
-  const total=state.tenantIncome.reduce((s,t)=>s+t.amount,0);
-  document.getElementById('tiTotal').textContent=fmtN(total);
-  document.getElementById('tiCount').textContent=state.tenantIncome.length+' cheques logged';
-  document.getElementById('tiReinvested').textContent=fmtN(total);
-  const tb=document.getElementById('tiTableBody');tb.innerHTML='';
-  if(!state.tenantIncome.length){tb.innerHTML='<tr><td colspan="4" class="loading">No entries yet.</td></tr>';return;}
-  [...state.tenantIncome].reverse().forEach(t=>{
-    const row=document.createElement('tr');
-    row.innerHTML=`<td>${new Date(t.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</td><td><strong style="color:var(--teal)">${fmtN(t.amount)}</strong></td><td style="color:var(--ink-faint)">${t.ref||'—'}</td><td style="color:var(--ink-faint)">${t.notes||'—'}</td>`;
+function refreshTI() {
+  var total=S.tenant.reduce(function(a,t){ return a+t.amount; },0);
+  document.getElementById('tiTotal').textContent=fn(total);
+  document.getElementById('tiCount').textContent=S.tenant.length+' cheques logged';
+  document.getElementById('tiReinvested').textContent=fn(total);
+  var tb=document.getElementById('tiTbody'); tb.innerHTML='';
+  if(!S.tenant.length){ tb.innerHTML='<tr><td colspan="4" class="empty">No entries yet.</td></tr>'; return; }
+  S.tenant.slice().reverse().forEach(function(t) {
+    var row=document.createElement('tr');
+    row.innerHTML='<td>'+new Date(t.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'</td>'
+      +'<td><strong style="color:var(--teal)">'+fn(t.amount)+'</strong></td>'
+      +'<td style="color:var(--ink-faint)">'+(t.ref||'—')+'</td>'
+      +'<td style="color:var(--ink-faint)">'+(t.notes||'—')+'</td>';
     tb.appendChild(row);
   });
 }
 
-// MORTGAGE LOG
-function prepopulateKnownPayments() {
-  [{date:'2026-02-28',amount:6453,ref:'EMI-001',notes:'First mortgage payment — Feb 2026',id:1},
-   {date:'2026-03-01',amount:6453,ref:'EMI-002',notes:'Second mortgage payment — Mar 2026',id:2},
-   {date:'2026-04-01',amount:6453,ref:'EMI-003',notes:'Third mortgage payment — Apr 2026',id:3}].forEach(k=>{
-    if(!state.mortgagePayments.find(p=>p.id===k.id)) state.mortgagePayments.push(k);
-  });
-  state.mortgagePayments.sort((a,b)=>a.date.localeCompare(b.date));
-  saveState();
+// ─── MORTGAGE LOG ─────────────────────────────────────────────────
+function saveML() {
+  var date=document.getElementById('mlDate').value, amt=parseFloat(document.getElementById('mlAmt').value);
+  var ref=document.getElementById('mlRef').value, notes=document.getElementById('mlNotes').value;
+  if(!date||!amt){ showMsg('mlMsg','Please fill in date and amount.','err'); return; }
+  S.mortgage.push({date:date,amount:amt,ref:ref,notes:notes,id:Date.now()});
+  S.mortgage.sort(function(a,b){ return a.date<b.date?-1:1; });
+  save(); showMsg('mlMsg','Saved.','ok');
+  ['mlDate','mlAmt','mlRef','mlNotes'].forEach(function(id){ document.getElementById(id).value=''; });
+  refreshML(); sync('mortgage_payment',{date:date,amount:amt,ref:ref,notes:notes});
 }
-function saveMortgagePayment() {
-  const date=document.getElementById('ml-date').value,amount=parseFloat(document.getElementById('ml-amount').value),ref=document.getElementById('ml-ref').value,notes=document.getElementById('ml-notes').value;
-  if(!date||!amount){showStatus('mlStatus','Please fill in date and amount.','error');return;}
-  state.mortgagePayments.push({date,amount,ref,notes,id:Date.now()});
-  state.mortgagePayments.sort((a,b)=>a.date.localeCompare(b.date));
-  saveState();showStatus('mlStatus','Payment saved.','success');
-  ['ml-date','ml-amount','ml-ref','ml-notes'].forEach(id=>document.getElementById(id).value='');
-  refreshMortLog();syncToSheet('mortgage_payment',{date,amount,ref,notes});
-}
-function refreshMortLog() {
-  const total=state.mortgagePayments.reduce((s,p)=>s+p.amount,0);
-  const principal=Math.round(total*0.502);
-  const outstanding=Math.max(0,CONFIG.MORT_ORIGINAL-principal);
-  document.getElementById('mlTotal').textContent=fmtN(total);
-  document.getElementById('mlCount').textContent=state.mortgagePayments.length+' payments logged';
-  document.getElementById('mlPrincipal').textContent='~'+fmtN(principal);
-  document.getElementById('mlOutstanding').textContent=fmtAED(outstanding);
-  const tb=document.getElementById('mlTableBody');tb.innerHTML='';
-  if(!state.mortgagePayments.length){tb.innerHTML='<tr><td colspan="4" class="loading">No payments logged.</td></tr>';return;}
-  [...state.mortgagePayments].reverse().forEach(p=>{
-    const row=document.createElement('tr');
-    row.innerHTML=`<td>${new Date(p.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</td><td><strong style="color:var(--red)">${fmtN(p.amount)}</strong></td><td style="color:var(--ink-faint)">${p.ref||'—'}</td><td style="color:var(--ink-faint)">${p.notes||'—'}</td>`;
+function refreshML() {
+  var total=S.mortgage.reduce(function(a,p){ return a+p.amount; },0);
+  var principal=Math.round(total*0.502);
+  var outstanding=Math.max(0,MORT_ORIG-principal);
+  document.getElementById('mlTotal').textContent=fn(total);
+  document.getElementById('mlCount').textContent=S.mortgage.length+' payments logged';
+  document.getElementById('mlPrincipal').textContent='~'+fn(principal);
+  document.getElementById('mlOutstanding').textContent=fa(outstanding);
+  document.getElementById('mtPays').textContent=S.mortgage.length;
+  var tb=document.getElementById('mlTbody'); tb.innerHTML='';
+  if(!S.mortgage.length){ tb.innerHTML='<tr><td colspan="4" class="empty">No payments.</td></tr>'; return; }
+  S.mortgage.slice().reverse().forEach(function(p) {
+    var row=document.createElement('tr');
+    row.innerHTML='<td>'+new Date(p.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'</td>'
+      +'<td><strong style="color:var(--red)">'+fn(p.amount)+'</strong></td>'
+      +'<td style="color:var(--ink-faint)">'+(p.ref||'—')+'</td>'
+      +'<td style="color:var(--ink-faint)">'+(p.notes||'—')+'</td>';
     tb.appendChild(row);
   });
 }
 
-// SYNC
-async function syncToSheet(action,data) {
-  try { await fetch(CONFIG.SCRIPT_URL,{method:'POST',body:JSON.stringify({action,data}),headers:{'Content-Type':'text/plain'}}); }
-  catch(e){console.warn('Sync failed:',e);}
+// ─── SETTLEMENT ───────────────────────────────────────────────────
+function saveST() {
+  var date=document.getElementById('stDate').value, amt=parseFloat(document.getElementById('stAmt').value);
+  var method=document.getElementById('stMethod').value, ref=document.getElementById('stRef').value, notes=document.getElementById('stNotes').value;
+  if(!date||!amt){ showMsg('stMsg','Please fill in date and amount.','err'); return; }
+  var rem=SETTLE_TOT-S.settlement.reduce(function(a,p){ return a+p.amount; },0);
+  if(amt>rem){ showMsg('stMsg','Amount exceeds outstanding '+fn(rem),'err'); return; }
+  S.settlement.push({date:date,amount:amt,method:method,ref:ref,notes:notes,id:Date.now()});
+  S.settlement.sort(function(a,b){ return a.date<b.date?-1:1; });
+  save(); showMsg('stMsg','Saved.','ok');
+  ['stDate','stAmt','stRef','stNotes'].forEach(function(id){ document.getElementById(id).value=''; });
+  refreshST(); sync('settlement_payment',{date:date,amount:amt,method:method,ref:ref,notes:notes});
 }
+function refreshST() {
+  var paid=S.settlement.reduce(function(a,p){ return a+p.amount; },0);
+  var rem=Math.max(0,SETTLE_TOT-paid);
+  var pct=Math.min(100,(paid/SETTLE_TOT*100));
+  var done=rem===0;
+  document.getElementById('stPaid').textContent=fn(paid);
+  document.getElementById('stPaidCount').textContent=S.settlement.length+' payment'+(S.settlement.length!==1?'s':'');
+  document.getElementById('stRemaining').textContent=fn(rem);
+  document.getElementById('stRemaining').style.color=done?'var(--teal)':'var(--red)';
+  document.getElementById('stPct').textContent=pct.toFixed(1)+'% settled';
+  document.getElementById('stProgBar').style.width=pct.toFixed(1)+'%';
+  document.getElementById('stProgPct').textContent=pct>5?pct.toFixed(0)+'%':'';
+  document.getElementById('stProgLabel').textContent=done?'Fully settled':fn(rem)+' remaining';
+  document.getElementById('stBreakdown').textContent=fn(rem);
+  document.getElementById('stBreakdownBadge').textContent=done?'Settled':'Outstanding';
+  document.getElementById('stBreakdownBadge').className='badge '+(done?'bg-g':'bg-r');
+  document.getElementById('dbSettlement').textContent=fn(rem);
+  document.getElementById('dbSettlement').style.color=done?'var(--teal)':'var(--red)';
 
-function showStatus(id,msg,type) {
-  const el=document.getElementById(id);el.textContent=msg;el.className='status-msg '+type;
-  setTimeout(()=>{el.className='status-msg';el.textContent='';},3500);
-}
-function setDefaultDates() {
-  const t=new Date().toISOString().split('T')[0];
-  document.getElementById('avpMonth').value=new Date().toISOString().slice(0,7);
-  document.getElementById('ti-date').value=t;
-  document.getElementById('ml-date').value=t;
-  document.getElementById('st-date').value=t;
-}
-
-
-// ═══════════════════════════════════════════
-// SETTLEMENT TRACKER
-// ═══════════════════════════════════════════
-const SETTLEMENT_TOTAL = 45761;
-
-function saveSettlementPayment() {
-  const date = document.getElementById('st-date').value;
-  const amount = parseFloat(document.getElementById('st-amount').value);
-  const method = document.getElementById('st-method').value;
-  const ref = document.getElementById('st-ref').value;
-  const notes = document.getElementById('st-notes').value;
-  if (!date || !amount) { showStatus('stStatus','Please fill in date and amount.','error'); return; }
-  if (amount > getRemainingSettlement()) { showStatus('stStatus','Amount exceeds outstanding balance of ' + fmtN(getRemainingSettlement()),'error'); return; }
-  state.settlementPayments = state.settlementPayments || [];
-  state.settlementPayments.push({date,amount,method,ref,notes,id:Date.now()});
-  state.settlementPayments.sort((a,b)=>a.date.localeCompare(b.date));
-  saveState();
-  showStatus('stStatus','Payment saved successfully.','success');
-  ['st-date','st-amount','st-ref','st-notes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('st-method').value='Bank Transfer';
-  refreshSettlement();
-  syncToSheet('settlement_payment',{date,amount,method,ref,notes});
-}
-
-function getRemainingSettlement() {
-  const paid = (state.settlementPayments||[]).reduce((s,p)=>s+p.amount,0);
-  return Math.max(0, SETTLEMENT_TOTAL - paid);
-}
-
-function refreshSettlement() {
-  state.settlementPayments = state.settlementPayments || [];
-  const paid = state.settlementPayments.reduce((s,p)=>s+p.amount,0);
-  const remaining = Math.max(0, SETTLEMENT_TOTAL - paid);
-  const pct = Math.min(100, (paid/SETTLEMENT_TOTAL*100));
-  const settled = remaining === 0;
-
-  document.getElementById('stPaid').textContent = fmtN(paid);
-  document.getElementById('stPaidCount').textContent = state.settlementPayments.length + ' payment' + (state.settlementPayments.length!==1?'s':'') + ' logged';
-  document.getElementById('stOutstanding').textContent = fmtN(remaining);
-  document.getElementById('stOutstanding').style.color = settled ? 'var(--teal)' : 'var(--red)';
-  document.getElementById('stOutstandingPct').textContent = pct.toFixed(1) + '% settled';
-  document.getElementById('stProgressBar').style.width = pct.toFixed(1) + '%';
-  document.getElementById('stProgressBar').style.background = settled ? 'var(--teal)' : pct > 50 ? 'var(--amber)' : 'var(--teal)';
-  document.getElementById('stProgressPct').textContent = pct > 5 ? pct.toFixed(0)+'%' : '';
-  document.getElementById('stProgressLabel').textContent = settled ? 'Fully settled' : fmtN(remaining) + ' remaining';
-  document.getElementById('stBreakdownRemaining').textContent = fmtN(remaining);
-  document.getElementById('stBreakdownBadge').textContent = settled ? 'Settled' : 'Outstanding';
-  document.getElementById('stBreakdownBadge').className = 'badge ' + (settled ? 'badge-green' : 'badge-red');
-
-  // Update property summary banner
-  document.getElementById('settlementBadge').textContent = settled ? 'Fully Settled' : fmtN(remaining) + ' outstanding';
-  document.getElementById('settlementBadge').className = 'badge ' + (settled ? 'badge-green' : 'badge-red');
-  if (settled) {
-    document.getElementById('settlementAlertBanner').className = 'alert-banner' ;
-    document.getElementById('settlementAlertBanner').style.background = 'rgba(29,158,117,0.07)';
-    document.getElementById('settlementAlertBanner').style.border = '1px solid rgba(29,158,117,0.2)';
-    document.getElementById('settlementAlertText').innerHTML = 'Upfront cost settlement fully paid. Martin has repaid Oksana the full 45,761 AED outstanding share.';
-    document.querySelector('#settlementAlertBanner .alert-title').textContent = 'Settlement Complete';
-    document.querySelector('#settlementAlertBanner .alert-title').style.color = 'var(--teal)';
+  if(S.settlement.length>=2&&rem>0) {
+    var avg=paid/S.settlement.length;
+    var mo=Math.ceil(rem/avg);
+    var cd=new Date(); cd.setMonth(cd.getMonth()+mo);
+    document.getElementById('stCompletion').textContent=cd.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+    document.getElementById('stCompletionSub').textContent='At avg '+fn(Math.round(avg))+'/payment';
+  } else if(done) {
+    document.getElementById('stCompletion').textContent='Settled';
+    document.getElementById('stCompletionSub').textContent='All payments complete';
   }
 
-  // Estimate completion date
-  if (state.settlementPayments.length >= 2 && remaining > 0) {
-    const payments = state.settlementPayments;
-    const avgAmount = paid / payments.length;
-    const monthsLeft = Math.ceil(remaining / avgAmount);
-    const completion = new Date();
-    completion.setMonth(completion.getMonth() + monthsLeft);
-    document.getElementById('stCompletion').textContent = completion.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
-    document.getElementById('stCompletionSub').textContent = 'At avg ' + fmtN(Math.round(avgAmount)) + '/payment';
-  } else if (settled) {
-    document.getElementById('stCompletion').textContent = 'Settled';
-    document.getElementById('stCompletionSub').textContent = 'All payments complete';
-  } else {
-    document.getElementById('stCompletion').textContent = '—';
-    document.getElementById('stCompletionSub').textContent = 'Log more payments to estimate';
-  }
-
-  // Build table
-  const tb = document.getElementById('stTableBody');
-  tb.innerHTML = '';
-  if (!state.settlementPayments.length) {
-    tb.innerHTML = '<tr><td colspan="7" class="loading">No payments logged yet.</td></tr>';
-    return;
-  }
-  let runBal = SETTLEMENT_TOTAL;
-  state.settlementPayments.forEach((p,i) => {
-    runBal -= p.amount;
-    const row = document.createElement('tr');
-    row.innerHTML = \`
-      <td style="color:var(--ink-faint)">\${i+1}</td>
-      <td>\${new Date(p.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</td>
-      <td><strong style="color:var(--teal)">\${fmtN(p.amount)}</strong></td>
-      <td><span class="badge badge-blue">\${p.method||'—'}</span></td>
-      <td style="color:var(--ink-faint)">\${p.ref||'—'}</td>
-      <td style="color:\${runBal<=0?'var(--teal)':'var(--red)'};">\${runBal<=0?'SETTLED':fmtN(runBal)}</td>
-      <td style="color:var(--ink-faint)">\${p.notes||'—'}</td>
-    \`;
+  var tb=document.getElementById('stTbody'); tb.innerHTML='';
+  if(!S.settlement.length){ tb.innerHTML='<tr><td colspan="7" class="empty">No payments logged yet.</td></tr>'; return; }
+  var run=SETTLE_TOT;
+  S.settlement.forEach(function(p,i) {
+    run-=p.amount;
+    var row=document.createElement('tr');
+    row.innerHTML='<td style="color:var(--ink-faint)">'+(i+1)+'</td>'
+      +'<td>'+new Date(p.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'</td>'
+      +'<td><strong style="color:var(--teal)">'+fn(p.amount)+'</strong></td>'
+      +'<td><span class="badge bg-b">'+(p.method||'—')+'</span></td>'
+      +'<td style="color:var(--ink-faint)">'+(p.ref||'—')+'</td>'
+      +'<td style="color:'+(run<=0?'var(--teal)':'var(--red)');'">'+( run<=0?'SETTLED':fn(run))+'</td>'
+      +'<td style="color:var(--ink-faint)">'+(p.notes||'—')+'</td>';
     tb.appendChild(row);
   });
 }
 
-function initPortal() {
-  buildProjections();
-  prepopulateKnownPayments();
-  setDefaultDates();
-  initDashboard();
-  buildProjectionChart();
+// ─── SYNC TO SHEET ────────────────────────────────────────────────
+function sync(action,data) {
+  fetch(SCRIPT,{method:'POST',body:JSON.stringify({action:action,data:data}),headers:{'Content-Type':'text/plain'}})
+    .catch(function(e){ console.warn('Sync failed:',e); });
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────
+function showMsg(id,txt,type) {
+  var el=document.getElementById(id);
+  el.textContent=txt; el.className='msg '+type;
+  setTimeout(function(){ el.className='msg'; el.textContent=''; },3000);
+}
+function setDates() {
+  var t=new Date().toISOString().split('T')[0];
+  var m=new Date().toISOString().slice(0,7);
+  ['avpMonth'].forEach(function(id){ document.getElementById(id).value=m; });
+  ['tiDate','mlDate','stDate'].forEach(function(id){ document.getElementById(id).value=t; });
+}
+
+// ─── START ────────────────────────────────────────────────────────
+window.addEventListener('load', function() {
+  setDates();
+  buildP();
+  initDash();
   refreshAVP();
-  refreshTenantLog();
-  refreshMortLog();
-  refreshSettlement();
-}
-
-window.addEventListener("load", initPortal);
+  refreshTI();
+  refreshML();
+  refreshST();
+});
 </script>
 </body>
 </html>
